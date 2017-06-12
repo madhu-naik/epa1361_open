@@ -1,0 +1,1662 @@
+{UTF-8}
+Initial relative infectivity in isolation=
+	1.2
+	~	Dmnl
+	~		|
+
+Change in relative infectivity in isolation due to experience=
+	0.0001
+	~	1/Person
+	~	1/(Person)
+	|
+
+Relative infectivity in isolation= INTEG (
+	-Decrease in relative infectivity in isolation,
+		Initial relative infectivity in isolation)
+	~	Dmnl
+	~		|
+
+Decrease in relative infectivity in isolation=
+	Relative infectivity in isolation * SUM( Isolation[Behavior!] ) * Change in relative infectivity in isolation due to experience
+	~	1/Day
+	~		|
+
+Contact rate isolated population=
+	Adjusted contact rate infectious population * Relative infectivity in isolation
+	~	1/Day
+	~		|
+
+Case fatality rate outside isolation=
+	0.7
+	~	Dmnl
+	~		|
+
+Case fatality rate outside isolation adjusted=
+	IF THEN ELSE ( Switch reduced virulence = 0 , Case fatality rate outside isolation ,\
+		 Relative virulence factor * Case fatality rate outside isolation )
+	~	Dmnl
+	~		|
+
+Case fatality rate in isolation=
+	0.65
+	~	Dmnl
+	~		|
+
+Case fatality rate=
+	ZIDZ( Buried deceased population , Buried deceased population + Recovered population\
+		 )
+	~	Dmnl
+	~		|
+
+Case fatality rate in isolation adjusted=
+	IF THEN ELSE ( Switch reduced virulence = 0 , Case fatality rate in isolation , Relative virulence factor\
+		 * Case fatality rate in isolation )
+	~	Dmnl
+	~		|
+
+Relative virulence factor= INTEG (
+	-Change in virulence,
+		Initial relative virulence)
+	~	Dmnl
+	~		|
+
+Adjusted contact rate infectious population=
+	IF THEN ELSE ( Switch reduced virulence = 0 , Average contact rate infectious population\
+		 , Average contact rate infectious population * Relative virulence factor )
+	~	1/Day
+	~		|
+
+Asymptomatic infections[Behavior]=
+	Number of asymptomatic infections per symptomatic infection * Infecting[Behavior]
+	~	Person/Day
+	~		|
+
+Immunization[Behavior]=
+	Vaccination[Behavior] + Asymptomatic infections[Behavior]
+	~	Person/Day
+	~		|
+
+Average contact rate infectious population=
+	0.55
+	~	1/Day
+	~		|
+
+Change in virulence per symptomatic EBOV case=
+	1e-005
+	~	1/Person
+	~		|
+
+Number of asymptomatic infections per symptomatic infection=
+	1
+	~	Dmnl
+	~		|
+
+Switch reduced virulence=
+	1
+	~	Dmnl
+	~		|
+
+Vaccination[Behavior]=
+	MIN ( Vaccination speed * Medical staff * 
+	Faction susceptible of total population[Behavior] , 
+	"Fraction normal vs self-quarantined"[Behavior] * Vaccines / One day ) / Vaccine per person
+	~	Person/Day
+	~		|
+
+Change in virulence=
+	Change in virulence per symptomatic EBOV case * SUM(Infecting[Behavior!]) * Relative virulence factor
+	~	1/Day
+	~		|
+
+Initial relative virulence=
+	1
+	~	Dmnl
+	~		|
+
+Reactive or proactive=
+	IF THEN ELSE ( Time > Proactive starting time , Switch reactive or proactive , 0 )
+	~	Dmnl
+	~	0 = reactive, ELSE = proactive
+	|
+
+Proactive starting time=
+	110
+	~	Day
+	~		|
+
+Relative reduction in infectivity due to isolation=
+	10
+	~	Dmnl
+	~		|
+
+Infecting[Behavior]=
+	( SUM("Total non-isolated infectious population parts"[Behavior!]) * Contact rate infectious population\
+		[Behavior] + Contact rates before funeral[Behavior]
+	 * SUM(Unburied deceased population[Behavior!]) + Contact rate isolated population *\
+		 Total isolated infectious population ) * Faction susceptible of total population[Behavior\
+		]
+	~	Person/Day
+	~		|
+
+Measured cumulative exposed cases= INTEG (
+	SUM(Recognized new cases[Behavior!]),
+		Initial exposed population + Initial infectious population + Initial recovered population\
+		)
+	~	Person
+	~	The cumulative number of measured EVD cases by the tracing officers
+	~	:SUPPLEMENTARY 
+	|
+
+Switch reactive or proactive=
+	0
+	~	Dmnl
+	~	0 = reactive, ELSE = proactive
+	|
+
+Absolute shortage in tracing personnel=
+	MAX ( Tracing personnel necessary - All tracing personnel , 0 )
+	~	Person
+	~		|
+
+All isolation capacity=
+	Capacity isolation + Isolation capacity in preparation + Isolation capacity mothballed
+	~	Person
+	~		|
+
+All tracing personnel=
+	Tracing personnel + Tracing personnel in preparation
+	~	Person
+	~		|
+
+Tracing personnel necessary=
+	IF THEN ELSE ( Reactive or proactive = 0 , Tracing personnel necessary reactive , Tracing personnel necessary proactive\
+		 )
+	~	Person
+	~		|
+
+Shortage in medical staff=
+	MAX ( Medical staff needed - Staff available or being prepared , 0 )
+	~	Person
+	~	MIN ( MAX ( Medical staff needed now - Staff available or being prepared , \
+		0 ) , Medical staff needed now )
+	|
+
+Staff available or being prepared=
+	Medical staff + Medical staff in preparation + Foreign staff in preparation
+	~	Person
+	~		|
+
+Doubling compared to development time isolation=
+	Average development time isolation facilities / Doubling time cases
+	~	Dmnl
+	~		|
+
+Medical staff needed=
+	IF THEN ELSE ( Reactive or proactive = 0 , Medical staff needed now reactive , Medical staff needed with proactive approach\
+		 )
+	~	Person
+	~		|
+
+Sum all infectious patients=
+	SUM(Infectious population[Behavior!]) + SUM(Infectious survived population[Behavior!\
+		]) + Isolated infectious population + Isolated survived population
+	~	Person
+	~		|
+
+Medical staff needed with proactive approach=
+	Doubling compared to delay time foreign staff development * Medical staff needed now reactive\
+		 + Medical staff needed now reactive
+	~	Person
+	~		|
+
+New isolation capacity needed reactive=
+	MAX ( SUM(Recognized new cases[Behavior!]) * ( Average period critical condition + Average recovery time survivors\
+		 ) + Total isolated infectious population - All isolation capacity , 0 )
+	~	Person
+	~		|
+
+Fractional growth rate cumulative cases=
+	Increasing of cases / Cumulative exposed cases
+	~	1/Day
+	~		|
+
+Reproduction ratio per day=
+	ZIDZ( SUM(Infecting[Behavior!]) , Sum all infectious patients )
+	~	1/Day
+	~		|
+
+Tracing personnel necessary proactive=
+	Doubling compared to delay time foreign staff development * Tracing personnel necessary reactive\
+		 + Tracing personnel necessary reactive
+	~	Person
+	~		|
+
+Doubling compared to delay time foreign staff development=
+	Preparing time foreign staff / Doubling time cases
+	~	Dmnl
+	~		|
+
+Preparing new isolation capacity=
+	New isolation capacity needed / One day
+	~	Person/Day
+	~		|
+
+Doubling time cases=
+	MIN ( LN 2 / Fractional growth rate cumulative cases , 200 )
+	~	Day
+	~	Definition by John Sterman 2000, p. 269
+	|
+
+New isolation capacity needed=
+	IF THEN ELSE ( Reactive or proactive = 0 , New isolation capacity needed reactive , \
+		New isolation capacity needed provactive )
+	~	Person
+	~		|
+
+New isolation capacity needed provactive=
+	Doubling compared to development time isolation * New isolation capacity needed reactive\
+		 + New isolation capacity needed reactive
+	~	Person
+	~		|
+
+LN 2=
+	0.693147
+	~	Dmnl
+	~	By definition
+	|
+
+Increasing of cases=
+	SUM(Total incubation[Behavior!])
+	~	Person/Day
+	~		|
+
+Medical staff= INTEG (
+	Importing of foreign medical staff+Medical staff finishing training-Medical staff leaving after active period\
+		-Staff getting ill+Medical staff preparing to return,
+		Initial medical staff)
+	~	Person
+	~		|
+
+Initial medical staff=
+	130
+	~	Person
+	~		|
+
+Isolation capacity mothballed= INTEG (
+	Mothballing of isolation capacity-Downscaling mothballed capacity,
+		Initial mothballed isolation capacity)
+	~	Person
+	~		|
+
+Capacity isolation= INTEG (
+	Isolation capacity becoming available-Downscaling isolation capacity-Mothballing of isolation capacity\
+		,
+		Initial isolation capacity)
+	~	Person
+	~		|
+
+Available isolation capacity=
+	Capacity isolation - Total isolated infectious population
+	~	Person
+	~		|
+
+Carrying capacity isolation available medical staff=
+	Medical staff / Necessary medical staff per bed
+	~	Person
+	~		|
+
+Initial mothballed isolation capacity=
+	0
+	~	Person
+	~		|
+
+Downscaling mothballed capacity=
+	Isolation capacity mothballed / Lifetime isolation capacity
+	~	Person/Day
+	~		|
+
+Necessary medical staff per bed=
+	0.35
+	~	Dmnl
+	~		|
+
+Mothballing of isolation capacity=
+	( MAX ( Capacity isolation - Carrying capacity isolation available medical staff , 0\
+		 ) - MIN ( Carrying capacity isolation available medical staff - Capacity isolation\
+		 , Isolation capacity mothballed ) ) / One day
+	~	Person/Day
+	~		|
+
+Medical staff needed now reactive=
+	SUM(Recognized new cases[Behavior!]) * Medical staff per new case * ( Average recovery time survivors\
+		 + Average period critical condition ) * One day
+	~	Person
+	~	http://www.who.int/mediacentre/news/ebola/8-september-2014/en/
+	|
+
+Medical staff per bed=
+	Medical staff / Capacity isolation
+	~	Dmnl
+	~		~	:SUPPLEMENTARY 
+	|
+
+Effective recognition rate= INTEG (
+	Change in recognition rate,
+		Recognition rate diseased)
+	~	Dmnl
+	~		|
+
+Tracing personnel preparing=
+	Absolute shortage in tracing personnel / One day
+	~	Person/Day
+	~		|
+
+Contacts to be traced=
+	SUM(Recognized new cases[Behavior!]) * Contacts to be traced per isolated patient
+	~	Contact/Day
+	~		|
+
+Medical staff leaving after active period=
+	Medical staff / Average time staff active
+	~	Person/Day
+	~		|
+
+Average time staff active=
+	360
+	~	Day
+	~		|
+
+"Population self-quarantining"=
+	Medical staff * Medical staff creating awareness * "Fraction normal vs self-quarantined"\
+		[Normal] * SUM(Faction susceptible of total population[Behavior!])
+	~	Person/Day
+	~		|
+
+Total non isolated infectious population=
+	SUM("Total non-isolated infectious population parts"[Behavior!])
+	~	Person
+	~		~	:SUPPLEMENTARY 
+	|
+
+Recognized new cases[Behavior]=
+	Total incubation[Behavior] * Effective recognition rate
+	~	Person/Day
+	~		|
+
+Tracing personnel leaving=
+	Tracing personnel / Average time staff active
+	~	Person/Day
+	~		|
+
+Incubation[Behavior]=
+	Total incubation[Behavior] - Isolation[Behavior]
+	~	Person/Day
+	~		|
+
+Tracing personnel= INTEG (
+	Tracing personnel becoming available-Tracing personnel leaving,
+		Initial tracing personnel)
+	~	Person
+	~		|
+
+Tracing personnel becoming available=
+	DELAY N( Tracing personnel preparing , Preparing time foreign staff , Tracing personnel in preparation\
+		 / Preparing time foreign staff , Delay order new staff )
+	~	Person/Day
+	~		|
+
+Contacts traceable per tracer per day=
+	20
+	~	Contact/(Person*Day)
+	~		|
+
+Change in recognition rate=
+	( Relative sufficiency in active tracing personnel * Recognition rate diseased - Effective recognition rate\
+		 ) / One day
+	~	1/Day
+	~		|
+
+Tracing personnel necessary reactive=
+	Contacts to be traced / Contacts traceable per tracer per day
+	~	Person
+	~		|
+
+Initial tracing personnel in preparation=
+	0
+	~	Person
+	~		|
+
+Initial tracing personnel=
+	30
+	~	Person
+	~		|
+
+Relative sufficiency in active tracing personnel=
+	MIN ( XIDZ ( Tracing personnel , Tracing personnel necessary reactive , 1 ) , 1 )
+	~	Dmnl
+	~		|
+
+Contacts to be traced per isolated patient=
+	40
+	~	Contact/Person
+	~		|
+
+Tracing personnel in preparation= INTEG (
+	Tracing personnel preparing-Tracing personnel becoming available,
+		Initial tracing personnel in preparation)
+	~	Person
+	~		|
+
+Foreign staff in preparation= INTEG (
+	Foreign staff preparing to come-Importing of foreign medical staff,
+		Initial staff in training)
+	~	Person
+	~		|
+
+Foreign staff preparing to come=
+	MAX ( ( Shortage in medical staff / One day - Medical staff starting training )  , 0\
+		 )
+	~	Person/Day
+	~		|
+
+Average infectivity for medical staff=
+	0.01
+	~	1/Day
+	~		|
+
+Medical staff finishing training=
+	DELAY N( Medical staff starting training , Training time new staff , Medical staff in preparation\
+		 / Training time new staff , Delay order new staff )
+	~	Person/Day
+	~		|
+
+Medical staff in preparation= INTEG (
+	Medical staff starting training-Medical staff finishing training,
+		Initial staff in training)
+	~	Person
+	~		|
+
+Average time until return diseased health workers=
+	42
+	~	Day
+	~		|
+
+Behavior:
+	Normal, Hygienic
+	~	
+	~		|
+
+Buried deceased population= INTEG (
+	Safe dying and burying isolated+SUM(Unsafe burying[Behavior!]),
+		Initial deceased population)
+	~	Person
+	~		|
+
+Infectious population[Behavior]= INTEG (
+	Incubation[Behavior] - Dying[Behavior] - "Non-isolated surviving"[Behavior],
+		Initial infectious population)
+	~	Person
+	~		|
+
+Faction susceptible of total population[Behavior]=
+	Susceptible population[Behavior] / Total alive population
+	~	Dmnl
+	~		|
+
+Training time new staff=
+	7
+	~	Day
+	~		|
+
+Contact rate infectious population[Normal]=
+	Adjusted contact rate infectious population ~~|
+Contact rate infectious population[Hygienic]=
+	Adjusted contact rate infectious population / Effect of self quarantining behavior
+	~	1/Day
+	~		|
+
+Contact rates before funeral[Normal]=
+	Contact rate before funeral ~~|
+Contact rates before funeral[Hygienic]=
+	Contact rate before funeral / Effect of self quarantining behavior
+	~	1/Day
+	~		|
+
+Preparing time foreign staff=
+	21
+	~	Day
+	~		|
+
+Delay order development new vaccines=
+	20
+	~	Dmnl
+	~		|
+
+Delay order new staff=
+	10
+	~	Dmnl
+	~		|
+
+Delay time development new vaccines=
+	250
+	~	Day
+	~		|
+
+Doctors per nurse=
+	0.25
+	~	Dmnl
+	~		|
+
+Medical staff preparing to return=
+	DELAY N( Staff getting ill * ( 1 - Case fatality rate in isolation adjusted ) , Average time until return diseased health workers\
+		 , 0 , Delay order new staff )
+	~	Person/Day
+	~		|
+
+Dying[Behavior]=
+	Infectious population[Behavior] / Average period critical condition * Case fatality rate outside isolation adjusted
+	~	Person/Day
+	~		|
+
+Effect of self quarantining behavior=
+	2
+	~	Dmnl
+	~	The factor by which the infection chance is reduced due to a change in \
+		behavior
+	|
+
+Exposed population[Behavior]= INTEG (
+	Infecting[Behavior]-Incubation[Behavior]-Isolation[Behavior],
+		Initial exposed population)
+	~	Person
+	~		|
+
+Vaccines to be prepared= INTEG (
+	-Preparing vaccines,
+		Vaccines needed)
+	~	Vaccine
+	~	Waarom zo???
+	|
+
+Relative availability isolation capacity=
+	MIN ( Net available isolation capacity / SUM(Recognized new cases[Behavior!]) , 1 )
+	~	Dmnl
+	~		|
+
+"Fraction normal vs self-quarantined"[Normal]=
+	ZIDZ ( Susceptible population[Normal] , SUM(Susceptible population[Behavior!]) ) ~~|
+"Fraction normal vs self-quarantined"[Hygienic]=
+	IF THEN ELSE ( SUM(Susceptible population[Behavior!]) > 1 , Susceptible population[Hygienic\
+		] / SUM(Susceptible population[Behavior!]) , 1 )
+	~	Dmnl
+	~		|
+
+Fraction local population with correct specs=
+	Recovered population * Fraction recovered population useful as medical staff + Fraction susceptible population useful as medical staff\
+		 * SUM(Susceptible population[Behavior!])
+	~	Person
+	~	If indeed the recovered population cannot be infected anymore, they could \
+		be used for treating patients as well.
+	|
+
+Fraction recovered population useful as medical staff=
+	0.1
+	~	Dmnl
+	~		|
+
+Fraction susceptible population useful as medical staff=
+	2e-005
+	~	Dmnl
+	~		|
+
+Immune population= INTEG (
+	SUM(Immunization[Behavior!]),
+		Initial immune population)
+	~	Person
+	~		~	:SUPPLEMENTARY 
+	|
+
+Importing of foreign medical staff=
+	DELAY N( Foreign staff preparing to come , Preparing time foreign staff , Foreign staff in preparation\
+		 / Preparing time foreign staff
+	 , Delay order new staff )
+	~	Person/Day
+	~		|
+
+Susceptible population[Normal]= INTEG (
+	-Immunization[Normal]-Infecting[Normal]-"Population self-quarantining",
+		Initial susceptible population * ( 1 - Initial relative susceptible hygienic population\
+		 )) ~~|
+Susceptible population[Hygienic]= INTEG (
+	-Infecting[Hygienic]+"Population self-quarantining"-Immunization[Hygienic],
+		Initial susceptible population * Initial relative susceptible hygienic population)
+	~	Person
+	~		|
+
+"Non-isolated recovering"[Behavior]=
+	Infectious survived population[Behavior] / Average recovery time survivors
+	~	Person/Day
+	~		|
+
+"Total non-isolated infectious population parts"[Behavior]=
+	Infectious population[Behavior] + Infectious survived population[Behavior]
+	~	Person
+	~		|
+
+Infectious survived population[Behavior]= INTEG (
+	"Non-isolated surviving"[Behavior]-"Non-isolated recovering"[Behavior],
+		Initial infectious population)
+	~	Person
+	~		|
+
+"Non-isolated surviving"[Behavior]=
+	Infectious population[Behavior] / Average period critical condition * ( 1 - Case fatality rate outside isolation adjusted\
+		 )
+	~	Person/Day
+	~		|
+
+Vaccination speed=
+	240
+	~	Vaccine/(Person*Day)
+	~		|
+
+Unburied deceased population[Behavior]= INTEG (
+	Dying[Behavior]-Unsafe burying[Behavior],
+		Initial dead before burial)
+	~	Person
+	~		|
+
+Unsafe burying[Behavior]=
+	Unburied deceased population[Behavior] / Average time until burial
+	~	Person/Day
+	~		|
+
+Preparing vaccines=
+	Vaccines to be prepared / Delay time development new vaccines
+	~	Vaccine/Day
+	~		|
+
+Using vaccines=
+	SUM(Immunization[Behavior!]) * Vaccine per person
+	~	Vaccine/Day
+	~	MIN(vacc per pers, vaccines/aministration time)
+	|
+
+Staff getting ill=
+	Medical staff * Average infectivity for medical staff * Relative availability isolation capacity
+	~	Person/Day
+	~		|
+
+Vaccine per person=
+	1
+	~	Vaccine/Person
+	~		|
+
+Vaccines needed=
+	1.7e+007
+	~	Vaccine
+	~		|
+
+Vaccines becoming available= 
+	DELAY N( Preparing vaccines , Delay time development new vaccines , Vaccines in preparation\
+		 / Delay time development new vaccines
+	 , Delay order development new vaccines )
+	~	Vaccine/Day
+	~		|
+
+Initial staff in training=
+	10
+	~	Person
+	~		|
+
+Isolated infectious population= INTEG (
+	SUM(Isolation[Behavior!])-Safe dying and burying isolated-Isolated surviving,
+		Initial isolated population)
+	~	Person
+	~		|
+
+Medical staff creating awareness=
+	10
+	~	1/Day
+	~		|
+
+Medical staff starting training=
+	MIN ( Shortage in medical staff * ( 1 - Doctors per nurse ) , Fraction local population with correct specs\
+		 ) / One day
+	~	Person/Day
+	~	We assume that presently no additional domestic academically trained \
+		physiciens are available and that none will be trained domestically. All \
+		necessary doctors thus need to be imported
+	|
+
+Total incubation[Behavior]=
+	Exposed population[Behavior] / Incubation period
+	~	Person/Day
+	~		|
+
+Recovered population= INTEG (
+	Isolated recovering+SUM("Non-isolated recovering"[Behavior!]),
+		Initial recovered population)
+	~	Person
+	~		|
+
+Isolation[Behavior]=
+	Relative availability isolation capacity * Recognized new cases[Behavior]
+	~	Person/Day
+	~		|
+
+Vaccines in preparation= INTEG (
+	Preparing vaccines-Vaccines becoming available,
+		Initial vaccines in preparation)
+	~	Vaccine
+	~		|
+
+Total alive population=
+	Total population - Buried deceased population
+	~	Person
+	~		|
+
+Initial relative susceptible hygienic population=
+	0.1
+	~	Dmnl
+	~		|
+
+Net available isolation capacity=
+	Available isolation capacity / One day + Patients leaving isolation
+	~	Person/Day
+	~		|
+
+Medical staff per new case=
+	0.35
+	~	1/Day
+	~	200 - 250 per 70 beds. \
+		http://www.who.int/mediacentre/news/ebola/8-september-2014/en/. Should \
+		probably be other way around
+	|
+
+Initial vaccines in preparation=
+	10
+	~	Vaccine
+	~	http://www.who.int/mediacentre/news/ebola/01-october-2014/en/index4.html
+	|
+
+Initial isolation capacity=
+	200
+	~	Person
+	~		|
+
+Initial vaccines=
+	0
+	~	Vaccine
+	~		|
+
+Vaccines= INTEG (
+	Vaccines becoming available-Using vaccines,
+		Initial vaccines)
+	~	Vaccine
+	~		|
+
+Cumulative exposed cases= INTEG (
+	Increasing of cases,
+		Initial exposed population + Initial infectious population + Initial recovered population\
+		)
+	~	Person
+	~	The cumulative number of EVD cases
+	|
+
+Average recovery time survivors=
+	5
+	~	Day
+	~		|
+
+Patients leaving isolation=
+	Isolated recovering + Safe dying and burying isolated
+	~	Person/Day
+	~		|
+
+Total isolated infectious population=
+	Isolated infectious population + Isolated survived population
+	~	Person
+	~		|
+
+Reproduction ratio=
+	Reproduction ratio per day * ( Average recovery time survivors + Average period critical condition\
+		 )
+	~	Dmnl
+	~		~	:SUPPLEMENTARY 
+	|
+
+Lifetime isolation capacity=
+	360
+	~	Day
+	~		|
+
+Isolated survived population= INTEG (
+	Isolated surviving-Isolated recovering,
+		Initial isolated population)
+	~	Person
+	~		|
+
+Downscaling isolation capacity=
+	Capacity isolation / Lifetime isolation capacity * ( 1 - Usage fraction isolation )
+	~	Person/Day
+	~		|
+
+Isolated recovering=
+	Isolated survived population / Average recovery time survivors
+	~	Person/Day
+	~		|
+
+One day=
+	1
+	~	Day
+	~	By definition
+	|
+
+Usage fraction isolation=
+	Total isolated infectious population / Capacity isolation
+	~	Dmnl
+	~		|
+
+Recognition rate diseased=
+	0.4
+	~	Dmnl
+	~		|
+
+Initial immune population=
+	0
+	~	Person
+	~		|
+
+Initial dead before burial=
+	0
+	~	Person
+	~		|
+
+Average time until burial=
+	2
+	~	Day
+	~		|
+
+Isolation capacity becoming available=
+	DELAY N( Preparing new isolation capacity, Average development time isolation facilities\
+		 , Isolation capacity in preparation / Average development time isolation facilities\
+		 , Delay order isolation capacity development )
+	~	Person/Day
+	~		|
+
+Average development time isolation facilities=
+	7
+	~	Day
+	~		|
+
+Average period critical condition=
+	7
+	~	Day
+	~		|
+
+Contact rate before funeral=
+	0.55
+	~	1/Day
+	~		|
+
+Delay order isolation capacity development=
+	3
+	~	Dmnl
+	~		|
+
+Incubation period=
+	21
+	~	Day
+	~		|
+
+Initial deceased population=
+	0
+	~	Person
+	~		|
+
+Initial exposed population=
+	60
+	~	Person
+	~		|
+
+Initial infectious population=
+	0
+	~	Person
+	~		|
+
+Initial isolation capacity in preparation=
+	0
+	~	Person
+	~		|
+
+Initial isolated population=
+	0
+	~	Person
+	~		|
+
+Initial recovered population=
+	0
+	~	Person
+	~		|
+
+Initial susceptible population=
+	Total population - Initial exposed population - Initial infectious population - Initial recovered population
+	~	Person
+	~		|
+
+Isolation capacity in preparation= INTEG (
+	Preparing new isolation capacity-Isolation capacity becoming available,
+		Initial isolation capacity in preparation)
+	~	Person
+	~		|
+
+Safe dying and burying isolated=
+	Isolated infectious population * Case fatality rate in isolation adjusted / Average period critical condition
+	~	Person/Day
+	~		|
+
+Isolated surviving=
+	Isolated infectious population * (1 - Case fatality rate in isolation adjusted ) / Average period critical condition
+	~	Person/Day
+	~		|
+
+Total population=
+	4e+006
+	~	Person
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 400
+	~	Day
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Day
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 1
+	~	Day [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.25
+	~	Day [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Population
+$192-192-192,0,Arial|12||0-0-0|0-0-0|0-125-196|-1--1--1|-1--1--1|96,96,80,0
+10,1,Exposed population,106,743,40,20,3,3,0,35,0,3,0,0,0-125-196,0-0-0,NeueHaasGroteskDisp Pro|12||0-125-196
+10,2,Susceptible population,-212,743,45,20,3,131,0,32,0,3,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+10,3,Recovered population,734,513,40,20,3,3,0,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+10,4,Buried deceased population,419,434,54,33,3,131,0,40,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|16||0-0-0
+10,5,Infectious population,419,743,40,20,3,3,0,35,0,3,0,0,255-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||255-0-0
+1,6,8,1,4,0,0,22,0,0,0,-1--1--1,,1|(10,744)|
+1,7,8,2,100,0,0,22,0,0,0,-1--1--1,,1|(-112,744)|
+11,8,1420,-51,744,6,8,34,3,0,0,1,0,0,0
+10,9,Infecting,-51,763,32,11,40,3,0,32,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,10,12,5,4,0,0,22,0,0,0,-1--1--1,,1|(323,743)|
+1,11,12,1,100,0,0,22,0,0,0,-1--1--1,,1|(201,743)|
+11,12,620,262,743,6,8,34,3,0,0,1,0,0,0
+10,13,Incubation,262,762,37,11,40,3,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,14,15,5,100,0,0,22,0,0,0,-1--1--1,,1|(514,742)|
+11,15,2204,576,742,6,8,34,3,0,0,3,0,0,0
+10,16,"Non-isolated surviving",576,716,47,18,40,131,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,17,18,5,100,0,0,22,0,0,0,-1--1--1,,1|(419,700)|
+11,18,2524,419,672,8,6,33,3,0,0,4,0,0,0
+10,19,Dying,449,672,22,11,40,3,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,20,5,19,1,1,0,0,0,64,0,-1--1--1,,1|(445,705)|
+1,21,5,16,1,1,0,0,0,64,0,-1--1--1,,1|(460,723)|
+10,22,Incubation period,51,564,37,19,8,131,1,48,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,23,Adjusted contact rate infectious population,130,992,77,19,8,131,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|196-71-0
+10,24,Initial recovered population,793,794,55,19,8,3,17,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+10,25,Initial infectious population,372,805,54,19,8,3,17,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+10,26,Initial exposed population,119,797,50,19,8,131,1,50,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+10,27,Initial susceptible population,-10,833,59,19,8,131,17,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+10,28,Total population,-79,1039,56,11,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+1,29,28,27,1,17,0,0,0,64,0,-1--1--1,,1|(-84,934)|
+1,30,26,27,1,17,0,0,0,64,0,-1--1--1,,1|(62,817)|
+1,31,25,27,1,17,0,0,3,64,0,92-92-92,|12||0-0-0,1|(163,838)|
+1,32,24,27,1,17,0,0,3,64,0,92-92-92,|12||0-0-0,1|(323,783)|
+10,33,Case fatality rate outside isolation adjusted,547,626,58,28,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,34,Average period critical condition,506,515,57,19,8,131,1,48,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+1,35,34,16,1,1,0,0,0,64,0,-1--1--1,,1|(595,622)|
+1,36,34,19,1,1,0,0,0,64,0,-1--1--1,,1|(487,588)|
+1,37,33,19,1,1,0,0,0,64,0,-1--1--1,,1|(518,664)|
+1,38,33,16,1,1,0,0,0,64,0,-1--1--1,,1|(576,679)|
+1,39,25,5,0,0,0,0,0,64,1,-1--1--1,,1|(390,780)|
+10,40,Initial deceased population,282,435,54,19,8,131,17,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+10,41,Faction susceptible of total population,-150,808,70,19,8,131,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,42,2,41,0,1,0,0,0,64,0,-1--1--1,,1|(-185,770)|
+1,43,41,9,1,1,0,0,0,64,0,-1--1--1,,1|(-102,784)|
+10,44,Contact rate before funeral,311,964,49,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,45,Isolated infectious population,419,276,46,26,3,131,0,35,0,0,0,0,255-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||255-0-0
+1,46,47,1,100,0,0,22,0,0,0,-1--1--1,,1|(106,658)|
+11,47,1452,106,587,8,6,33,3,0,0,4,0,0,0
+10,48,Isolation,145,587,31,11,40,131,0,32,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,49,51,4,4,0,0,22,0,0,0,-1--1--1,,1|(419,379)|
+1,50,51,45,100,0,0,22,0,0,0,-1--1--1,,1|(419,323)|
+11,51,284,419,351,8,6,33,3,0,0,4,0,0,0
+10,52,Safe dying and burying isolated,484,351,57,19,40,131,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,53,54,45,100,0,0,22,0,0,0,-1--1--1,,1|(515,276)|
+11,54,2460,572,276,6,8,34,3,0,0,1,0,0,0
+10,55,Isolated surviving,572,303,31,19,40,131,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,56,34,55,1,1,0,0,0,64,0,-1--1--1,,1|(603,421)|
+1,57,34,52,1,1,0,0,0,64,0,-1--1--1,,1|(480,434)|
+1,58,45,52,1,1,0,0,0,64,0,-1--1--1,,1|(435,311)|
+1,59,45,55,1,1,0,0,0,64,0,-1--1--1,,1|(492,297)|
+10,60,Total incubation,23,622,56,11,8,131,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,61,1,60,1,1,0,0,0,64,0,-1--1--1,,1|(57,697)|
+1,62,22,60,0,1,0,0,0,64,0,-1--1--1,,1|(38,590)|
+1,63,48,12,1,1,0,0,0,64,0,-1--1--1,,1|(234,661)|
+10,64,Case fatality rate in isolation adjusted,551,425,66,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+1,65,64,52,1,1,0,0,0,64,0,-1--1--1,,1|(529,377)|
+1,66,64,55,1,1,0,0,0,64,0,-1--1--1,,1|(579,361)|
+10,67,Unburied deceased population,419,587,45,25,3,131,0,35,0,3,0,0,255-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||255-0-0
+1,68,18,67,4,0,0,22,0,0,0,-1--1--1,,1|(419,639)|
+1,69,71,4,4,0,0,22,0,0,0,-1--1--1,,1|(419,487)|
+1,70,71,67,100,0,0,22,0,0,0,-1--1--1,,1|(419,540)|
+11,71,924,419,513,8,6,33,3,0,0,2,0,0,0
+10,72,Unsafe burying,358,513,53,11,40,131,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,73,67,72,1,1,0,0,0,64,0,-1--1--1,,1|(361,550)|
+10,74,Average time until burial,302,608,46,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+1,75,74,72,1,1,0,0,0,64,0,-1--1--1,,1|(317,548)|
+10,76,Initial dead before burial,281,584,44,19,8,3,17,50,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+1,77,76,67,0,0,0,0,0,64,1,-1--1--1,,1|(342,584)|
+10,78,Immune population,-215,1050,45,20,3,131,0,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,79,81,78,4,0,0,22,0,0,0,-1--1--1,,1|(-213,971)|
+1,80,81,2,100,0,0,22,0,0,0,-1--1--1,,1|(-213,832)|
+11,81,2812,-213,907,8,6,33,3,0,0,4,0,0,0
+10,82,Immunization,-158,907,47,11,40,3,0,32,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+10,83,Initial immune population,-309,1052,47,19,8,3,4,50,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+1,84,83,78,0,0,0,0,0,64,1,-1--1--1,,1|(-267,1053)|
+10,85,Cumulative exposed cases,-143,436,85,24,3,131,1,40,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|16||0-0-0
+12,86,48,-398,432,10,8,0,3,1,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,87,89,85,4,1,0,22,0,0,0,-1--1--1,,1|(-265,433)|
+1,88,89,86,100,1,0,22,0,0,0,-1--1--1,,1|(-351,433)|
+11,89,48,-308,433,6,8,34,3,1,0,1,0,0,0
+10,90,Increasing of cases,-308,460,46,19,40,3,1,32,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,91,26,85,0,0,0,0,0,64,1,-1--1--1,,1|(-5,624)|
+10,92,Recognition rate diseased,-170,156,58,19,8,3,1,50,0,0,0,0,-1--1--1,255-255-0,NeueHaasGroteskDisp Pro|12|I|0-128-0
+10,93,Recognized new cases,20,506,60,19,8,131,1,32,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,94,60,93,1,1,0,0,0,64,0,-1--1--1,,1|(3,549)|
+1,95,93,48,1,1,0,0,0,64,0,-1--1--1,,1|(80,540)|
+10,96,Isolated survived population,734,276,46,27,3,131,0,35,0,0,0,0,255-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||255-0-0
+1,97,54,96,4,0,0,22,0,0,0,-1--1--1,,1|(633,276)|
+1,98,100,3,4,0,0,22,0,0,0,-1--1--1,,1|(732,444)|
+1,99,100,96,100,0,0,22,0,0,0,-1--1--1,,1|(732,343)|
+11,100,1468,732,389,8,6,33,3,0,0,2,0,0,0
+10,101,Isolated recovering,685,389,39,19,40,131,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,102,96,101,1,1,0,0,0,64,0,-1--1--1,,1|(693,334)|
+10,103,Average recovery time survivors,632,512,61,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+1,104,103,101,0,1,0,0,0,64,0,-1--1--1,,1|(655,456)|
+10,105,Infectious survived population,734,743,40,20,3,3,0,35,0,3,0,0,255-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||255-0-0
+1,106,15,105,4,0,0,22,0,0,0,-1--1--1,,1|(638,742)|
+1,107,109,3,4,0,0,22,0,0,0,-1--1--1,,1|(734,580)|
+1,108,109,105,100,0,0,22,0,0,0,-1--1--1,,1|(734,681)|
+11,109,1436,734,633,8,6,33,3,0,0,2,0,0,0
+10,110,"Non-isolated recovering",679,633,47,19,40,3,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,111,103,110,0,1,0,0,0,64,0,-1--1--1,,1|(652,565)|
+1,112,105,110,1,1,0,0,0,64,0,-1--1--1,,1|(680,688)|
+1,113,25,105,1,0,0,0,0,64,1,-1--1--1,,1|(516,808)|
+1,114,25,85,0,0,0,0,0,64,1,-1--1--1,,1|(124,627)|
+1,115,24,85,0,0,0,0,0,64,1,-1--1--1,,1|(338,619)|
+10,116,Reproduction ratio per day,-593,818,49,19,8,3,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+10,117,Infecting,-488,681,40,11,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,118,117,116,0,1,0,0,0,64,0,-1--1--1,,1|(-532,739)|
+10,119,Infectious population,-842,905,42,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,120,Infectious survived population,-636,1030,71,19,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,121,Isolated infectious population,-780,750,70,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,122,Isolated survived population,-794,1065,65,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,123,Reproduction ratio,-624,693,65,24,8,3,1,40,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|16||0-0-0
+1,124,116,123,1,1,0,0,0,64,0,-1--1--1,,1|(-615,772)|
+10,125,Average period critical condition,-738,610,61,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,126,Average recovery time survivors,-560,602,68,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,127,125,123,0,1,0,0,0,64,0,-1--1--1,,1|(-689,644)|
+1,128,126,123,0,1,0,0,0,64,0,-1--1--1,,1|(-585,639)|
+10,129,Buried deceased population,8,1085,66,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,130,One day,324,468,30,11,8,3,1,48,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,131,Total isolated infectious population,600,197,97,24,8,3,1,40,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|16||0-0-0
+1,132,45,131,1,1,0,0,0,64,0,-1--1--1,,1|(475,227)|
+1,133,96,131,1,1,0,0,0,64,0,-1--1--1,,1|(720,229)|
+10,134,Patients leaving isolation,314,350,56,19,8,3,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,135,52,134,1,1,0,0,0,64,0,-1--1--1,,1|(391,347)|
+10,136,Isolated recovering,307,300,43,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,137,136,134,0,1,0,0,0,64,0,-1--1--1,,1|(308,318)|
+10,138,"Total non-isolated infectious population parts",576,824,74,28,8,3,1,32,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,139,5,138,0,1,0,0,0,64,0,-1--1--1,,1|(482,776)|
+1,140,105,138,0,1,0,0,0,64,0,-1--1--1,,1|(668,776)|
+10,141,Initial isolated population,382,228,47,19,8,3,4,50,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+10,142,Available isolation capacity,175,327,67,19,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,143,141,96,0,1,0,0,0,64,1,-1--1--1,,1|(551,250)|
+1,144,145,2,100,0,0,22,0,0,0,-1--1--1,,1|(-212,668)|
+11,145,1900,-212,607,8,6,33,3,0,0,4,0,0,0
+10,146,"Population self-quarantining",-144,607,60,19,40,131,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+10,147,Total alive population,-39,955,38,19,8,3,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,148,28,147,0,1,0,0,0,64,0,-1--1--1,,1|(-64,1007)|
+1,149,129,147,0,1,0,0,0,64,0,-1--1--1,,1|(-12,1026)|
+1,150,147,41,1,1,0,0,0,64,0,-1--1--1,,1|(-68,861)|
+1,151,26,1,0,0,0,0,0,64,1,-1--1--1,,1|(114,777)|
+1,152,138,9,1,1,0,0,0,64,0,-1--1--1,,1|(248,792)|
+10,153,Initial relative susceptible hygienic population,-348,790,70,28,8,3,4,50,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+1,154,47,45,4,0,0,22,0,0,0,-1--1--1,,3|(106,275)|(372,275)|(372,275)|
+10,155,Net available isolation capacity,204,416,61,19,8,131,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,156,142,155,0,1,0,0,0,64,0,-1--1--1,,1|(186,364)|
+1,157,134,155,1,1,0,0,0,64,0,-1--1--1,,1|(263,373)|
+10,158,Relative availability isolation capacity,177,506,66,19,8,131,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,159,93,158,0,1,0,0,0,64,0,-1--1--1,,1|(88,506)|
+1,160,155,158,1,1,0,0,0,64,0,-1--1--1,,1|(196,450)|
+1,161,130,155,0,1,0,0,0,64,0,-1--1--1,,1|(279,448)|
+1,162,158,48,1,1,0,0,0,64,0,-1--1--1,,1|(171,556)|
+1,163,145,2,4,0,0,22,2,0,0,-1--1--1,|12||0-0-0,5|(-212,558)|(-212,558)|(-368,558)|(-368,741)|(-312,741)|
+1,164,141,45,0,0,0,0,0,64,1,-1--1--1,,1|(393,242)|
+1,165,24,3,0,0,0,0,0,64,1,-1--1--1,,1|(765,660)|
+1,166,40,4,0,0,0,0,0,64,1,-1--1--1,,1|(343,434)|
+1,167,153,2,0,0,0,0,0,64,1,-1--1--1,,1|(-274,764)|
+1,168,27,2,0,0,0,0,0,64,1,-1--1--1,,1|(-103,791)|
+10,169,Effect of self quarantining behavior,275,1017,75,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,170,Vaccination speed,-424,942,42,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,171,Medical staff creating awareness,-227,524,67,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,172,Medical staff,-109,551,54,11,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,173,171,146,0,1,0,0,0,64,0,-1--1--1,,1|(-190,560)|
+1,174,172,146,0,1,0,0,0,64,0,-1--1--1,,1|(-119,569)|
+10,175,"Fraction normal vs self-quarantined",-298,647,65,19,8,131,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,176,175,146,0,1,0,0,0,64,0,-1--1--1,,1|(-225,628)|
+1,177,2,175,0,1,0,0,0,64,0,-1--1--1,,1|(-249,699)|
+10,178,Contact rate infectious population,78,903,74,19,8,131,1,32,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,179,23,178,0,1,0,0,0,64,0,-1--1--1,,1|(107,953)|
+1,180,169,178,1,1,0,0,0,64,0,-1--1--1,,1|(191,947)|
+1,181,178,9,1,1,0,0,0,64,0,-1--1--1,,1|(8,821)|
+10,182,Contact rates before funeral,141,854,50,19,8,3,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,183,44,182,0,1,0,0,0,64,0,-1--1--1,,1|(231,912)|
+1,184,169,182,0,1,0,0,0,64,0,-1--1--1,,1|(212,940)|
+1,185,182,9,1,1,0,0,0,64,0,-1--1--1,,1|(29,804)|
+10,186,One day,-432,868,39,11,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,187,Medical staff,-432,832,54,11,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,188,Vaccines,-429,903,41,11,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,189,41,146,1,1,0,0,0,64,0,-1--1--1,,1|(-130,703)|
+1,190,60,12,1,1,0,0,0,64,0,-1--1--1,,1|(142,666)|
+10,191,Total non isolated infectious population,802,831,97,24,8,3,1,40,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|16||0-0-0
+1,192,138,191,0,1,0,0,0,64,0,-1--1--1,,1|(670,826)|
+10,193,Unburied deceased population,-80,668,42,28,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,194,193,9,1,1,0,0,0,64,0,-1--1--1,,1|(-67,719)|
+12,195,0,-190,701,12,19,8,7,0,42,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|24||0-125-196
+S
+12,196,0,125,701,12,19,8,7,0,42,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|24||0-125-196
+E
+12,197,0,401,701,6,19,8,7,0,42,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|24||0-125-196
+I
+12,198,0,711,554,13,19,8,7,0,42,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|24||0-125-196
+R
+12,199,0,717,701,6,19,8,7,0,42,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|24||0-125-196
+I
+10,200,Relative sufficiency in active tracing personnel,-191,362,89,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,201,Effective recognition rate,-103,231,47,26,3,131,1,34,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-128-0
+12,202,48,-401,227,10,8,0,3,1,34,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-128-0
+1,203,205,201,4,1,0,22,1,0,0,0-128-0,|12||0-0-0,1|(-207,227)|
+1,204,205,202,100,1,0,22,1,0,0,0-128-0,|12||0-0-0,1|(-334,227)|
+11,205,48,-271,227,6,8,34,3,1,0,1,0,0,0
+10,206,Change in recognition rate,-271,254,56,19,40,131,1,34,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-128-0
+1,207,200,206,0,1,0,0,0,64,0,-1--1--1,,1|(-226,313)|
+10,208,One day,-393,344,39,11,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,209,208,206,0,1,0,0,0,64,0,-1--1--1,,1|(-343,307)|
+1,210,92,201,0,0,0,0,1,64,1,0-128-0,|12||0-0-0,1|(-144,184)|
+1,211,92,206,0,1,0,0,1,64,0,0-128-0,|12||0-0-0,1|(-214,200)|
+1,212,201,93,0,1,0,0,0,64,0,-1--1--1,,1|(-43,365)|
+1,213,201,206,1,1,0,0,1,64,0,0-128-0,|12||0-0-0,1|(-180,264)|
+1,214,60,90,1,1,0,0,0,64,0,-1--1--1,,1|(-146,499)|
+10,215,Sum all infectious patients,-714,888,62,19,8,131,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,216,122,215,0,1,0,0,0,64,0,-1--1--1,,1|(-756,982)|
+1,217,121,215,0,1,0,0,0,64,0,-1--1--1,,1|(-750,812)|
+1,218,120,215,0,1,0,0,0,64,0,-1--1--1,,1|(-671,965)|
+1,219,119,215,0,1,0,0,0,64,0,-1--1--1,,1|(-794,899)|
+1,220,215,116,0,1,0,0,0,64,0,-1--1--1,,1|(-659,856)|
+10,221,Measured cumulative exposed cases,327,171,84,34,3,131,1,40,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|16||0-0-0
+12,222,48,1,170,10,8,0,3,1,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+11,223,48,127,170,6,8,2,3,1,0,1,0,0,0
+1,224,223,222,100,1,0,22,0,0,0,-1--1--1,,1|(66,170)|
+1,225,93,223,1,1,0,0,0,64,0,-1--1--1,,1|(56,322)|
+1,226,223,221,4,1,0,22,0,0,0,-1--1--1,,1|(188,170)|
+1,227,26,221,0,0,0,0,0,64,1,-1--1--1,,1|(217,498)|
+1,228,25,221,0,0,0,0,0,64,1,-1--1--1,,1|(350,502)|
+1,229,24,221,0,0,0,0,0,64,1,-1--1--1,,1|(569,495)|
+10,230,Contact rate isolated population,-10,874,68,19,8,131,1,32,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+10,231,Total isolated infectious population,5,689,78,19,8,130,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,232,Relative reduction in infectivity due to isolation,117,1144,87,19,8,3,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+1,233,23,230,1,1,0,0,0,64,0,-1--1--1,,1|(56,939)|
+1,234,230,9,0,1,0,0,0,64,0,-1--1--1,,1|(-29,821)|
+1,235,231,9,0,1,0,0,0,64,0,-1--1--1,,1|(-21,724)|
+10,236,Vaccine per person,-427,995,47,19,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+10,237,Relative virulence factor,-747,301,40,20,3,3,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+12,238,48,-529,301,10,8,0,3,1,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,239,241,238,4,1,0,22,0,0,0,-1--1--1,,1|(-578,301)|
+1,240,241,237,100,1,0,22,0,0,0,-1--1--1,,1|(-668,301)|
+11,241,48,-623,301,6,8,34,3,1,0,1,0,0,0
+10,242,Change in virulence,-623,328,36,19,40,3,1,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+10,243,Vaccination,-302,905,41,11,8,3,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,244,175,243,0,1,0,0,0,64,0,-1--1--1,,1|(-299,773)|
+1,245,187,243,0,1,0,0,0,64,0,-1--1--1,,1|(-373,865)|
+1,246,186,243,0,1,0,0,0,64,0,-1--1--1,,1|(-373,884)|
+1,247,188,243,0,1,0,0,0,64,0,-1--1--1,,1|(-372,903)|
+1,248,170,243,0,1,0,0,0,64,0,-1--1--1,,1|(-366,925)|
+1,249,236,243,0,1,0,0,0,64,0,-1--1--1,,1|(-364,950)|
+1,250,41,243,1,1,0,0,0,64,0,-1--1--1,,1|(-238,839)|
+10,251,Number of asymptomatic infections per symptomatic infection,-147,1117,93,28,8,131,1,48,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,252,Asymptomatic infections,-138,863,53,19,8,3,1,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,253,251,252,1,1,0,0,0,64,0,-1--1--1,,1|(-117,986)|
+1,254,9,252,1,1,0,0,0,64,0,-1--1--1,,1|(-75,806)|
+1,255,237,242,1,1,0,0,0,64,0,-1--1--1,,1|(-719,337)|
+10,256,Initial relative virulence,-754,252,45,19,8,3,1,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+1,257,243,82,1,1,0,0,0,64,0,-1--1--1,,1|(-241,891)|
+1,258,252,82,0,1,0,0,0,64,0,-1--1--1,,1|(-146,882)|
+10,259,Change in virulence per symptomatic EBOV case,-603,208,86,19,8,3,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,260,Infecting,-630,428,40,11,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,261,259,242,1,1,0,0,0,64,0,-1--1--1,,1|(-595,262)|
+1,262,260,242,0,1,0,0,0,64,0,-1--1--1,,1|(-627,388)|
+1,263,256,237,0,0,0,0,0,64,1,-1--1--1,,1|(-752,269)|
+10,264,Average contact rate infectious population,303,1126,73,19,8,131,1,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|196-71-0
+10,265,Switch reduced virulence,345,1070,55,19,8,3,1,50,0,0,0,0,-1--1--1,0-125-196,NeueHaasGroteskDisp Pro|12|I|0-125-196
+1,266,265,23,1,1,0,0,0,64,0,-1--1--1,,1|(252,1067)|
+1,267,264,23,1,1,0,0,0,64,0,-1--1--1,,1|(183,1058)|
+10,268,Relative virulence factor,128,1065,59,19,8,2,1,35,-1,0,0,0,128-128-128,0-0-0,NeueHaasGroteskDisp Pro|12||128-128-128
+1,269,268,23,0,1,0,0,0,64,0,-1--1--1,,1|(128,1035)|
+10,270,Case fatality rate outside isolation,864,627,58,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,271,Case fatality rate in isolation,868,426,58,19,8,131,1,48,0,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+10,272,Switch reduced virulence,883,514,61,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,273,272,64,1,1,0,0,0,64,0,-1--1--1,,1|(693,450)|
+1,274,272,33,1,1,0,0,0,64,0,-1--1--1,,1|(706,582)|
+1,275,270,33,1,1,0,0,0,64,0,-1--1--1,,1|(743,595)|
+1,276,271,64,0,1,0,0,0,64,0,-1--1--1,,1|(720,425)|
+10,277,Relative virulence factor,1054,515,60,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,278,277,64,1,1,0,0,0,64,0,-1--1--1,,1|(843,459)|
+1,279,277,33,0,1,0,0,0,64,0,-1--1--1,,1|(806,569)|
+10,280,Case fatality rate,1224,734,46,18,8,3,1,0,0,0,0,0
+10,281,Buried deceased population,983,744,68,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,282,Recovered population,1218,669,45,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,283,281,280,0,1,0,0,0,64,0,-1--1--1,,1|(1107,738)|
+1,284,282,280,0,1,0,0,0,64,0,-1--1--1,,1|(1219,694)|
+10,285,Relative infectivity in isolation,986,274,44,25,3,131,1,0,0,0,0,0
+12,286,48,1294,274,10,8,0,3,1,0,-1,0,0,0
+1,287,289,286,4,1,0,22,0,0,0,-1--1--1,,1|(1223,274)|
+1,288,289,285,100,1,0,22,0,0,0,-1--1--1,,1|(1090,274)|
+11,289,48,1157,274,6,8,34,3,1,0,1,0,0,0
+10,290,Decrease in relative infectivity in isolation,1157,300,74,18,40,3,1,0,-1,0,0,0
+1,291,285,290,1,1,0,0,0,64,0,-1--1--1,,1|(1036,319)|
+10,292,Isolation,1156,424,40,10,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,293,292,290,0,1,0,0,0,64,0,-1--1--1,,1|(1156,373)|
+10,294,Initial relative infectivity in isolation,946,171,78,19,8,3,2,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+1,295,294,285,0,0,0,0,0,64,1,-1--1--1,,1|(961,212)|
+10,296,Change in relative infectivity in isolation due to experience,1170,160,94,28,8,3,1,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,297,296,290,1,1,0,0,0,64,0,-1--1--1,,1|(1188,222)|
+10,298,Relative infectivity in isolation,-23,1149,42,27,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,299,298,230,1,1,0,0,0,64,0,-1--1--1,,1|(2,1014)|
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*Interventions
+$192-192-192,0,Arial|12||0-0-0|0-0-0|0-125-196|-1--1--1|-1--1--1|96,96,70,0
+10,1,Vaccines,428,249,48,20,3,131,0,0,0,0,0,0
+10,2,Vaccines in preparation,129,248,51,21,3,131,0,0,0,0,0,0
+1,3,5,1,4,0,0,22,0,0,0,-1--1--1,,1|(333,249)|
+1,4,5,2,100,0,0,22,0,0,0,-1--1--1,,1|(227,249)|
+11,5,2956,280,249,6,8,34,3,0,0,1,0,0,0
+10,6,Vaccines becoming available,280,285,43,28,40,131,0,0,-1,0,0,0
+12,7,48,659,249,10,8,0,3,0,0,-1,0,0,0
+1,8,10,7,4,0,0,22,0,0,0,-1--1--1,,1|(606,249)|
+1,9,10,1,100,0,0,22,0,0,0,-1--1--1,,1|(514,249)|
+11,10,48,558,249,6,8,34,3,0,0,1,0,0,0
+10,11,Using vaccines,558,275,55,10,40,3,0,0,-1,0,0,0
+10,12,Initial vaccines in preparation,145,206,65,19,8,3,3,18,0,0,0,0,0-0-0,0-0-0,|12|I|92-92-92
+10,13,Initial vaccines,428,217,55,11,8,3,3,18,0,0,0,0,0-0-0,0-0-0,|12|I|92-92-92
+1,14,13,1,0,0,0,0,0,64,1,-1--1--1,,1|(428,221)|
+10,15,Immunization,608,357,50,11,8,130,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,16,15,11,0,1,0,0,0,64,0,-1--1--1,,1|(586,321)|
+10,17,Medical staff,1531,298,40,20,3,3,0,0,0,0,0,0
+10,18,Medical staff in preparation,1278,298,43,26,3,131,0,0,0,0,0,0
+1,19,21,17,4,0,0,22,0,0,0,-1--1--1,,1|(1450,298)|
+1,20,21,18,100,0,0,22,0,0,0,-1--1--1,,1|(1359,298)|
+11,21,1292,1404,298,6,8,34,3,0,0,1,0,0,0
+10,22,Medical staff finishing training,1404,330,46,24,40,131,0,0,-1,0,0,0
+1,23,24,17,4,0,0,22,0,0,0,-1--1--1,,1|(1513,242)|
+11,24,1724,1513,200,8,6,33,3,0,0,2,0,0,0
+10,25,Importing of foreign medical staff,1434,200,71,21,40,131,0,0,-1,0,0,0
+12,26,48,1759,297,10,8,0,3,0,0,-1,0,0,0
+1,27,29,26,4,0,0,22,0,0,0,-1--1--1,,1|(1707,297)|
+1,28,29,17,100,0,0,22,0,0,0,-1--1--1,,1|(1612,297)|
+11,29,48,1660,297,6,8,34,3,0,0,1,0,0,0
+10,30,Staff getting ill,1660,315,51,10,40,3,0,0,-1,0,0,0
+12,31,48,1043,298,10,8,0,3,0,0,-1,0,0,0
+1,32,34,18,4,0,0,22,0,0,0,-1--1--1,,1|(1193,298)|
+1,33,34,31,100,0,0,22,0,0,0,-1--1--1,,1|(1096,298)|
+11,34,48,1145,298,6,8,34,3,0,0,1,0,0,0
+10,35,Medical staff starting training,1145,324,56,18,40,3,0,0,-1,0,0,0
+10,36,Initial isolated population,1765,772,52,19,8,3,3,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+10,37,Capacity isolation,1498,742,40,20,3,3,0,0,0,0,0,0
+10,38,Isolation capacity in preparation,1245,742,44,22,3,131,0,32,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+12,39,48,1032,744,10,8,0,3,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,40,42,38,4,0,0,22,0,0,0,-1--1--1,,1|(1162,744)|
+1,41,42,39,100,0,0,22,0,0,0,-1--1--1,,1|(1076,744)|
+11,42,48,1117,744,6,8,34,3,0,0,1,0,0,0
+10,43,Preparing new isolation capacity,1117,776,64,18,40,131,0,32,-1,0,0,0,-1--1--1,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,44,46,37,4,0,0,22,0,0,0,-1--1--1,,1|(1419,741)|
+1,45,46,38,100,0,0,22,0,0,0,-1--1--1,,1|(1329,741)|
+11,46,1628,1375,741,6,8,34,3,0,0,1,0,0,0
+10,47,Isolation capacity becoming available,1375,775,71,18,40,131,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+12,48,48,1743,742,10,8,0,3,0,32,-1,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12||0-0-0
+1,49,51,48,4,0,0,22,0,0,0,-1--1--1,,1|(1687,742)|
+1,50,51,37,100,0,0,22,0,0,0,-1--1--1,,1|(1583,742)|
+11,51,48,1635,742,6,8,34,3,0,0,1,0,0,0
+10,52,Downscaling isolation capacity,1635,769,64,18,40,3,0,0,-1,0,0,0
+10,53,Initial isolation capacity,1512,871,54,19,8,131,3,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+10,54,Initial isolation capacity in preparation,1249,693,54,28,8,3,3,50,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|92-92-92
+1,55,54,38,1,0,0,0,0,64,1,-1--1--1,,1|(1256,714)|
+10,56,Average development time isolation facilities,1200,905,83,19,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,57,56,47,1,0,0,0,0,64,0,-1--1--1,,1|(1281,843)|
+1,58,38,47,1,0,0,0,0,64,1,-1--1--1,,1|(1287,770)|
+10,59,Delay order isolation capacity development,1173,839,49,29,8,131,0,48,0,0,0,0,0-0-0,0-0-0,NeueHaasGroteskDisp Pro|12|I|0-0-0
+1,60,59,47,1,0,0,0,0,64,1,-1--1--1,,1|(1281,781)|
+1,61,43,47,1,0,0,0,2,65,0,-1--1--1,|12||0-0-0,1|(1243,804)|
+10,62,Available isolation capacity,1403,846,71,18,8,3,0,0,0,0,0,0
+1,63,37,62,1,0,0,0,0,64,0,-1--1--1,,1|(1464,792)|
+10,64,Lifetime isolation capacity,1705,675,64,19,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,65,64,52,0,0,0,0,0,64,0,-1--1--1,,1|(1673,716)|
+1,66,37,52,1,0,0,0,0,64,0,-1--1--1,,1|(1544,772)|
+10,67,Usage fraction isolation,1601,833,54,18,8,3,0,0,0,0,0,0
+1,68,37,67,1,0,0,0,0,64,0,-1--1--1,,1|(1526,784)|
+1,69,67,52,1,0,0,0,0,64,0,-1--1--1,,1|(1636,799)|
+10,70,Medical staff per new case,1170,637,62,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,71,Medical staff needed now reactive,1162,551,76,18,8,3,0,0,0,0,0,0
+1,72,70,71,0,0,0,0,0,64,0,-1--1--1,,1|(1166,600)|
+10,73,Recognized new cases,948,664,49,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,74,Total isolated infectious population,1372,932,82,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,75,74,62,0,1,0,0,0,64,0,-1--1--1,,1|(1384,895)|
+10,76,Total isolated infectious population,1742,819,49,32,8,130,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,77,76,67,0,1,0,0,0,64,0,-1--1--1,,1|(1680,824)|
+10,78,Delay time development new vaccines,134,366,66,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,79,Case fatality rate in isolation adjusted,1864,243,67,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,80,Average time until return diseased health workers,1787,158,81,27,8,3,0,0,0,0,0,0
+10,81,Delay order development new vaccines,-22,360,66,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,82,Initial staff in training,1278,104,47,19,8,3,3,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+1,83,82,18,0,0,0,0,0,64,1,-1--1--1,,1|(1278,190)|
+1,84,18,22,0,0,0,0,0,64,1,-1--1--1,,1|(1332,311)|
+1,85,35,22,1,0,0,0,2,65,0,-1--1--1,|12||0-0-0,1|(1276,250)|
+1,86,78,6,1,0,0,0,0,64,0,-1--1--1,,1|(213,335)|
+10,87,Vaccine per person,491,356,45,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,88,87,11,0,0,0,0,0,64,0,-1--1--1,,1|(523,316)|
+10,89,Delay order new staff,1343,232,44,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,90,Medical staff preparing to return,1684,226,67,18,8,3,0,0,0,0,0,0
+1,91,30,90,1,0,0,0,0,64,0,-1--1--1,,1|(1688,279)|
+1,92,79,90,0,1,0,0,0,64,0,-1--1--1,,1|(1780,235)|
+1,93,80,90,0,0,0,0,0,64,0,-1--1--1,,1|(1734,192)|
+1,94,89,90,0,0,0,0,0,64,1,-1--1--1,,1|(1495,229)|
+10,95,Foreign staff in preparation,1278,150,45,25,3,131,0,0,0,0,0,0
+1,96,24,95,100,0,0,22,0,0,0,-1--1--1,,1|(1513,150)|
+12,97,48,1043,151,10,8,0,3,0,0,-1,0,0,0
+1,98,100,95,4,0,0,22,0,0,0,-1--1--1,,1|(1192,151)|
+1,99,100,97,100,0,0,22,0,0,0,-1--1--1,,1|(1096,151)|
+11,100,48,1145,151,6,8,34,3,0,0,1,0,0,0
+10,101,Foreign staff preparing to come,1145,177,67,18,40,3,0,0,-1,0,0,0
+1,102,82,95,0,0,0,0,0,64,1,-1--1--1,,1|(1278,117)|
+10,103,Training time new staff,1445,252,50,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,104,103,22,1,0,0,0,0,64,0,-1--1--1,,1|(1428,289)|
+10,105,Fraction local population with correct specs,897,237,55,27,8,3,0,0,0,0,0,0
+10,106,Recovered population,765,161,45,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,107,Fraction recovered population useful as medical staff,894,162,75,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,108,Fraction susceptible population useful as medical staff,745,236,75,28,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,109,107,105,0,0,0,0,0,64,0,-1--1--1,,1|(895,193)|
+1,110,108,105,0,0,0,0,0,64,0,-1--1--1,,1|(824,236)|
+10,111,Susceptible population,759,323,48,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,112,106,105,0,1,0,0,0,64,0,-1--1--1,,1|(816,191)|
+1,113,111,105,0,1,0,0,0,64,0,-1--1--1,,1|(814,288)|
+1,114,105,35,1,0,0,0,0,64,0,-1--1--1,,1|(1008,303)|
+1,115,89,22,0,0,0,0,0,64,1,-1--1--1,,1|(1367,272)|
+10,116,Relative availability isolation capacity,1866,353,76,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,117,116,30,1,1,0,0,0,64,0,-1--1--1,,1|(1734,349)|
+10,118,Average infectivity for medical staff,1798,398,69,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,119,17,30,1,0,0,0,0,64,0,-1--1--1,,1|(1591,323)|
+1,120,118,30,1,0,0,0,0,64,0,-1--1--1,,1|(1695,355)|
+10,121,Doctors per nurse,1169,236,44,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,122,Shortage in medical staff,1013,358,47,18,8,3,0,0,0,0,0,0
+10,123,Foreign staff in preparation,1168,426,59,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,124,122,35,1,0,0,0,0,64,0,-1--1--1,,1|(1099,348)|
+1,125,121,35,1,0,0,0,0,64,0,-1--1--1,,1|(1164,268)|
+1,126,122,101,1,0,0,0,0,64,0,-1--1--1,,1|(1017,219)|
+1,127,35,101,1,0,0,0,0,64,0,-1--1--1,,1|(1103,248)|
+10,128,One day,1062,258,40,10,8,2,2,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,129,128,101,1,2,0,0,0,64,0,-1--1--1,,1|(1082,219)|
+1,130,128,35,1,2,0,0,0,64,0,-1--1--1,,1|(1079,289)|
+10,131,Vaccines needed,-161,203,35,19,8,3,3,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+1,132,2,6,1,0,0,0,0,64,1,-1--1--1,,1|(188,287)|
+10,133,Vaccines to be prepared,-162,248,40,20,3,3,0,0,0,0,0,0
+1,134,136,2,4,0,0,22,0,0,0,-1--1--1,,1|(31,248)|
+1,135,136,133,100,0,0,22,0,0,0,-1--1--1,,1|(-75,248)|
+11,136,2668,-22,248,6,8,34,3,0,0,1,0,0,0
+10,137,Preparing vaccines,-22,274,37,18,40,3,0,0,-1,0,0,0
+1,138,131,133,0,0,0,0,0,64,1,-1--1--1,,1|(-161,218)|
+1,139,133,137,1,0,0,0,0,64,0,-1--1--1,,1|(-57,287)|
+1,140,78,137,1,0,0,0,0,64,0,-1--1--1,,1|(53,325)|
+1,141,12,2,0,0,0,0,0,64,1,-1--1--1,,1|(140,219)|
+1,142,81,6,0,0,0,0,0,64,1,-1--1--1,,1|(133,321)|
+1,143,137,6,1,0,0,0,2,65,0,-1--1--1,|12||0-0-0,1|(142,299)|
+10,144,Preparing time foreign staff,1414,103,56,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+12,145,48,1530,481,10,8,0,3,0,0,-1,0,0,0
+1,146,148,145,4,0,0,22,0,0,0,-1--1--1,,1|(1530,437)|
+1,147,148,17,100,0,0,22,0,0,0,-1--1--1,,1|(1530,353)|
+11,148,48,1530,395,8,6,33,3,0,0,2,0,0,0
+10,149,Medical staff leaving after active period,1475,395,47,27,40,131,0,0,-1,0,0,0
+10,150,Average time staff active,1433,468,50,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+1,151,150,149,0,0,0,0,0,64,0,-1--1--1,,1|(1447,441)|
+1,152,17,149,1,0,0,0,0,64,0,-1--1--1,,1|(1508,336)|
+12,153,0,1724,92,116,25,8,135,0,10,-1,0,0,0,-1--1--1,0-0-0,|20||0-125-196
+MEDICAL STAFF
+12,154,0,1571,937,71,31,8,135,0,10,-1,0,0,0,0-0-0,0-0-0,|20||0-125-196
+ISOLATION CAPACITY
+12,155,0,14,135,133,26,8,135,0,10,-1,0,0,0,-1--1--1,0-0-0,|20||0-125-196
+VACCINE PROGRAM
+10,156,Tracing personnel,428,742,40,20,3,3,0,0,0,0,0,0
+10,157,Tracing personnel in preparation,129,742,46,23,3,131,0,0,0,0,0,0
+12,158,48,-142,741,10,8,0,3,0,0,-1,0,0,0
+1,159,161,157,4,0,0,22,0,0,0,-1--1--1,,1|(33,741)|
+1,160,161,158,100,0,0,22,0,0,0,-1--1--1,,1|(-80,741)|
+11,161,48,-22,741,6,8,34,3,0,0,1,0,0,0
+10,162,Tracing personnel preparing,-22,767,66,18,40,3,0,0,-1,0,0,0
+1,163,165,156,4,0,0,22,0,0,0,-1--1--1,,1|(337,742)|
+1,164,165,157,100,0,0,22,0,0,0,-1--1--1,,1|(225,742)|
+11,165,2044,281,742,6,8,34,3,0,0,1,0,0,0
+10,166,Tracing personnel becoming available,281,773,71,23,40,131,0,0,-1,0,0,0
+12,167,48,659,741,10,8,0,3,0,0,-1,0,0,0
+1,168,170,167,4,0,0,22,0,0,0,-1--1--1,,1|(606,741)|
+1,169,170,156,100,0,0,22,0,0,0,-1--1--1,,1|(510,741)|
+11,170,48,558,741,6,8,34,3,0,0,1,0,0,0
+10,171,Tracing personnel leaving,558,767,64,18,40,3,0,0,-1,0,0,0
+10,172,Preparing time foreign staff,261,864,59,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,173,Delay order new staff,16,866,48,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,174,162,166,1,0,0,0,2,65,0,-1--1--1,|12||0-0-0,1|(131,824)|
+1,175,156,171,1,0,0,0,0,64,0,-1--1--1,,1|(477,799)|
+10,176,Average time staff active,581,846,54,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,177,176,171,0,1,0,0,0,64,0,-1--1--1,,1|(571,813)|
+1,178,172,166,0,1,0,0,0,64,0,-1--1--1,,1|(267,827)|
+1,179,173,166,0,0,0,0,0,64,1,-1--1--1,,1|(132,825)|
+1,180,157,166,0,0,0,0,0,64,1,-1--1--1,,1|(185,753)|
+10,181,Initial tracing personnel in preparation,140,880,48,28,8,3,3,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+10,182,Initial tracing personnel,431,850,48,19,8,3,3,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+1,183,181,157,0,0,0,0,0,64,1,-1--1--1,,1|(134,815)|
+1,184,182,156,0,0,0,0,0,64,1,-1--1--1,,1|(429,803)|
+10,185,Contacts to be traced per isolated patient,-139,428,79,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,186,Contacts traceable per tracer per day,-276,626,70,19,8,3,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,187,Contacts to be traced,-260,494,54,18,8,3,0,0,0,0,0,0
+10,188,Recognized new cases,-318,423,49,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,189,188,187,0,1,0,0,0,64,0,-1--1--1,,1|(-294,453)|
+1,190,185,187,0,0,0,0,0,64,0,-1--1--1,,1|(-194,458)|
+10,191,Tracing personnel necessary reactive,-76,569,69,18,8,3,0,0,0,0,0,0
+1,192,186,191,0,0,0,0,0,64,0,-1--1--1,,1|(-182,598)|
+1,193,187,191,0,0,0,0,0,64,0,-1--1--1,,1|(-175,528)|
+10,194,Absolute shortage in tracing personnel,87,675,75,18,8,3,0,0,0,0,0,0
+1,195,194,162,1,0,0,0,0,64,0,-1--1--1,,1|(28,714)|
+10,196,One day,-169,816,40,10,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,197,196,162,0,1,0,0,0,64,0,-1--1--1,,1|(-115,797)|
+10,198,Relative sufficiency in active tracing personnel,271,457,78,27,8,3,0,0,0,0,0,0
+1,199,191,198,0,0,0,0,0,64,0,-1--1--1,,1|(79,518)|
+1,200,156,198,1,0,0,0,0,64,0,-1--1--1,,1|(410,639)|
+1,201,73,71,1,1,0,0,0,64,0,-1--1--1,,1|(1065,627)|
+10,202,Medical staff per bed,1841,687,47,18,8,3,0,0,0,0,0,0
+1,203,17,202,1,0,0,0,0,64,0,-1--1--1,,1|(1744,461)|
+1,204,37,202,1,0,0,0,0,64,0,-1--1--1,,1|(1761,882)|
+12,205,48,1545,148,10,8,0,3,0,0,-1,0,0,0
+11,206,48,1545,200,8,6,1,3,0,0,1,0,0,0
+1,207,206,205,100,0,0,22,0,0,0,-1--1--1,,1|(1545,175)|
+1,208,90,206,1,0,0,0,0,64,0,-1--1--1,,1|(1597,187)|
+1,209,89,25,0,0,0,0,0,64,1,-1--1--1,,1|(1373,221)|
+1,210,95,25,0,0,0,0,0,64,1,-1--1--1,,1|(1338,169)|
+1,211,101,25,1,0,0,0,2,65,0,-1--1--1,|12||0-0-0,1|(1276,204)|
+1,212,144,25,0,0,0,0,0,64,0,-1--1--1,,1|(1421,143)|
+10,213,Average recovery time survivors,1323,510,69,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,214,Average period critical condition,1328,582,61,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,215,214,71,0,1,0,0,0,64,0,-1--1--1,,1|(1259,569)|
+1,216,213,71,0,1,0,0,0,64,0,-1--1--1,,1|(1249,528)|
+12,217,0,-294,748,116,17,8,135,0,10,-1,0,0,0,-1--1--1,0-0-0,|20||0-125-196
+TRACING STAFF
+10,218,Isolation capacity mothballed,1498,580,40,25,3,131,0,0,0,0,0,0
+1,219,221,218,4,0,0,22,0,0,0,-1--1--1,,1|(1498,631)|
+1,220,221,37,100,0,0,22,0,0,0,-1--1--1,,1|(1498,695)|
+11,221,1164,1498,663,8,6,33,3,0,0,4,0,0,0
+10,222,Mothballing of isolation capacity,1550,663,44,25,40,131,0,0,-1,0,0,0
+1,223,37,222,0,0,0,0,0,64,0,-1--1--1,,1|(1518,710)|
+10,224,Initial mothballed isolation capacity,1488,525,65,19,8,3,1,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+1,225,224,218,0,0,0,0,0,64,1,-1--1--1,,1|(1490,542)|
+10,226,Necessary medical staff per bed,1693,547,72,19,8,131,0,16,0,0,0,0,-1--1--1,0-0-0,|12|I|0-0-0
+10,227,Carrying capacity isolation available medical staff,1616,470,66,27,8,3,0,0,0,0,0,0
+1,228,17,227,0,0,0,0,0,64,0,-1--1--1,,1|(1567,374)|
+1,229,226,227,0,0,0,0,0,64,0,-1--1--1,,1|(1663,517)|
+10,230,One day,1387,678,40,10,8,2,2,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,231,230,221,0,2,0,0,0,64,0,-1--1--1,,1|(1451,669)|
+1,232,227,222,1,0,0,0,0,64,0,-1--1--1,,1|(1559,564)|
+1,233,53,37,0,0,0,0,0,64,1,-1--1--1,,1|(1505,813)|
+10,234,One day,1168,843,40,10,8,2,2,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,235,234,43,0,2,0,0,0,64,0,-1--1--1,,1|(1149,818)|
+1,236,218,222,1,0,0,0,0,64,0,-1--1--1,,1|(1528,621)|
+12,237,48,1725,581,10,8,0,3,0,0,-1,0,0,0
+1,238,240,237,4,0,0,22,0,0,0,-1--1--1,,1|(1673,581)|
+1,239,240,218,100,0,0,22,0,0,0,-1--1--1,,1|(1579,581)|
+11,240,48,1626,581,6,8,34,3,0,0,1,0,0,0
+10,241,Downscaling mothballed capacity,1626,607,73,18,40,3,0,0,-1,0,0,0
+1,242,218,241,1,0,0,0,0,64,0,-1--1--1,,1|(1545,613)|
+1,243,64,241,0,0,0,0,0,64,0,-1--1--1,,1|(1669,644)|
+10,244,Initial medical staff,1583,251,31,27,8,131,1,18,0,0,0,0,-1--1--1,0-0-0,|12|I|92-92-92
+1,245,244,17,0,0,0,0,0,64,1,-1--1--1,,1|(1560,278)|
+1,246,206,17,4,0,0,22,0,0,0,-1--1--1,,1|(1545,242)|
+10,247,Reactive or proactive,219,569,42,18,8,3,0,0,0,0,0,0
+10,248,Doubling time cases,519,978,51,18,8,3,0,0,0,0,0,0
+10,249,Cumulative exposed cases,363,1127,61,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,250,LN 2,650,990,19,10,8,3,0,0,0,0,0,0
+1,251,250,248,0,0,0,0,0,64,0,-1--1--1,,1|(607,986)|
+10,252,Fractional growth rate cumulative cases,492,1063,79,18,8,3,0,0,0,0,0,0
+1,253,249,252,0,1,0,0,0,64,0,-1--1--1,,1|(420,1098)|
+10,254,Increasing of cases,597,1140,52,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,255,254,252,0,1,0,0,0,64,0,-1--1--1,,1|(550,1105)|
+1,256,252,248,0,0,0,0,0,64,0,-1--1--1,,1|(502,1027)|
+10,257,Medical staff needed with proactive approach,905,539,87,18,8,3,0,0,0,0,0,0
+10,258,Doubling compared to delay time foreign staff development,662,538,82,27,8,3,0,0,0,0,0,0
+10,259,Preparing time foreign staff,559,620,59,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,260,Doubling time cases,479,510,56,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,261,260,258,0,1,0,0,0,64,0,-1--1--1,,1|(550,520)|
+1,262,259,258,0,1,0,0,0,64,0,-1--1--1,,1|(598,587)|
+1,263,258,257,0,0,0,0,0,64,0,-1--1--1,,1|(774,538)|
+1,264,71,257,1,0,0,0,0,64,0,-1--1--1,,1|(1018,573)|
+10,265,Staff available or being prepared,1268,379,61,18,8,3,0,0,0,0,0,0
+1,266,18,265,0,0,0,0,0,64,0,-1--1--1,,1|(1273,335)|
+1,267,17,265,1,0,0,0,0,64,0,-1--1--1,,1|(1446,351)|
+1,268,123,265,0,1,0,0,0,64,0,-1--1--1,,1|(1211,405)|
+1,269,265,122,0,0,0,0,0,64,0,-1--1--1,,1|(1140,368)|
+10,270,Reactive or proactive,908,469,47,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,271,Medical staff needed,1088,484,47,18,8,3,0,0,0,0,0,0
+1,272,270,271,0,1,0,0,0,64,0,-1--1--1,,1|(991,475)|
+1,273,257,271,1,0,0,0,0,64,0,-1--1--1,,1|(982,498)|
+1,274,71,271,0,0,0,0,0,64,0,-1--1--1,,1|(1130,522)|
+1,275,271,122,0,0,0,0,0,64,0,-1--1--1,,1|(1054,426)|
+10,276,Doubling compared to development time isolation,851,968,81,27,8,3,0,0,0,0,0,0
+1,277,248,276,1,0,0,0,0,64,0,-1--1--1,,1|(655,955)|
+1,278,56,276,1,0,0,0,0,64,0,-1--1--1,,1|(1054,962)|
+10,279,New isolation capacity needed provactive,846,881,61,27,8,3,0,0,0,0,0,0
+10,280,New isolation capacity needed reactive,853,801,61,27,8,3,0,0,0,0,0,0
+1,281,276,279,0,0,0,0,0,64,0,-1--1--1,,1|(849,931)|
+1,282,280,279,0,0,0,0,0,64,0,-1--1--1,,1|(850,834)|
+10,283,All isolation capacity,1121,694,42,18,8,3,0,0,0,0,0,0
+1,284,38,283,1,0,0,0,0,64,0,-1--1--1,,1|(1175,727)|
+1,285,37,283,1,0,0,0,0,64,0,-1--1--1,,1|(1308,708)|
+1,286,218,283,1,0,0,0,0,64,0,-1--1--1,,1|(1314,625)|
+1,287,73,280,0,1,0,0,0,64,0,-1--1--1,,1|(907,722)|
+1,288,283,280,1,0,0,0,0,64,0,-1--1--1,,1|(1000,734)|
+10,289,Average period critical condition,740,725,61,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,290,Average recovery time survivors,705,791,69,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,291,Total isolated infectious population,686,898,80,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,292,291,280,0,1,0,0,0,64,0,-1--1--1,,1|(754,857)|
+1,293,290,280,0,1,0,0,0,64,0,-1--1--1,,1|(776,795)|
+1,294,289,280,0,1,0,0,0,64,0,-1--1--1,,1|(783,754)|
+10,295,New isolation capacity needed,1021,828,61,18,8,3,0,0,0,0,0,0
+1,296,280,295,0,0,0,0,0,64,0,-1--1--1,,1|(930,812)|
+1,297,279,295,0,0,0,0,0,64,0,-1--1--1,,1|(927,856)|
+1,298,295,43,0,0,0,0,0,64,0,-1--1--1,,1|(1062,805)|
+10,299,Reactive or proactive,1025,910,47,18,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,300,299,295,0,1,0,0,0,64,0,-1--1--1,,1|(1023,875)|
+10,301,All tracing personnel,280,672,36,18,8,3,0,0,0,0,0,0
+1,302,157,301,1,0,0,0,0,64,0,-1--1--1,,1|(229,711)|
+1,303,156,301,1,0,0,0,0,64,0,-1--1--1,,1|(338,693)|
+1,304,301,194,1,0,0,0,0,64,0,-1--1--1,,1|(216,652)|
+10,305,Doubling compared to delay time foreign staff development,-129,700,86,27,8,2,1,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,306,Tracing personnel necessary proactive,-90,628,73,18,8,3,0,0,0,0,0,0
+1,307,191,306,0,0,0,0,0,64,0,-1--1--1,,1|(-82,591)|
+1,308,305,306,0,1,0,0,0,64,0,-1--1--1,,1|(-111,665)|
+10,309,Tracing personnel necessary,82,605,66,18,8,3,0,0,0,0,0,0
+1,310,191,309,0,0,0,0,0,64,0,-1--1--1,,1|(-3,585)|
+1,311,306,309,0,0,0,0,0,64,0,-1--1--1,,1|(-8,617)|
+1,312,247,309,0,0,0,0,0,64,0,-1--1--1,,1|(169,581)|
+1,313,309,194,0,0,0,0,0,64,0,-1--1--1,,1|(83,633)|
+10,314,Switch reactive or proactive,324,624,65,19,8,3,0,18,0,0,0,0,-1--1--1,0-0-0,|12|I|0-125-196
+10,315,Time,198,516,29,10,8,2,2,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,316,315,247,0,2,0,0,0,64,0,-1--1--1,,1|(203,532)|
+1,317,314,247,0,0,0,0,0,64,0,-1--1--1,,1|(276,599)|
+10,318,Proactive starting time,330,562,46,19,8,3,0,18,0,0,0,0,-1--1--1,0-0-0,|12|I|128-0-0
+1,319,318,247,0,0,0,0,0,64,0,-1--1--1,,1|(279,564)|
+10,320,One day,1193,484,40,10,8,2,2,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,321,320,71,0,2,0,0,0,64,0,-1--1--1,,1|(1182,507)|
+///---\\\
+:L<%^E!@
+1:Proactive3.vdf
+1:Proactive2.vdf
+9:Proactive3
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,1,0,0
+19:80,0
+27:2,
+34:0,
+4:Time
+5:Switch reduced virulence
+35:Date
+36:YYYY-MM-DD
+37:0
+38:1
+39:1
+40:4
+41:0
+24:0
+25:400
+26:400
+6:Hygienic
+6:Normal
