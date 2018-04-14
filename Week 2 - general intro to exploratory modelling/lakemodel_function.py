@@ -19,7 +19,7 @@ def lake_problem(
          alpha = 0.4,       # utility from pollution
          nsamples = 100,    # Monte Carlo sampling of natural inflows
          **kwargs):   
-    decisions = [kwargs[str(i)] for i in range(100)]
+    decisions = [kwargs[str(i)] for i in range(nsamples)]
     
     Pcrit = brentq(lambda x: x**q/(1+x**q) - b*x, 0.01, 1.5)
     nvars = len(decisions)
@@ -45,6 +45,6 @@ def lake_problem(
       
     max_P = np.max(average_daily_P)
     utility = np.sum(alpha*decisions*np.power(delta,np.arange(nvars)))
-    inertia = np.sum(np.diff(decisions) > -0.02)/float(nvars-1)
+    inertia = np.sum(np.abs(np.diff(decisions)) > 0.02)/float(nvars-1)
 
     return max_P, utility, inertia, reliability
