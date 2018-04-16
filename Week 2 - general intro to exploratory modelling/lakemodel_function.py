@@ -14,7 +14,7 @@ def lake_problem(
          b = 0.42,          # decay rate for P in lake (0.42 = irreversible)
          q = 2.0,           # recycling exponent
          mean = 0.02,       # mean of natural inflows
-         stdev = 0.001,     # future utility discount rate
+         stdev = 0.0017,     # future utility discount rate
          delta = 0.98,      # standard deviation of natural inflows
          alpha = 0.4,       # utility from pollution
          nsamples = 100,    # Monte Carlo sampling of natural inflows
