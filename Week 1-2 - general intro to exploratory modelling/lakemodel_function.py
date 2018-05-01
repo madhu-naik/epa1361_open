@@ -18,8 +18,9 @@ def lake_problem(
          delta = 0.98,      # standard deviation of natural inflows
          alpha = 0.4,       # utility from pollution
          nsamples = 100,    # Monte Carlo sampling of natural inflows
+         steps=100,
          **kwargs):   
-    decisions = [kwargs[str(i)] for i in range(nsamples)]
+    decisions = [kwargs[str(i)] for i in range(steps)]
     
     Pcrit = brentq(lambda x: x**q/(1+x**q) - b*x, 0.01, 1.5)
     nvars = len(decisions)
