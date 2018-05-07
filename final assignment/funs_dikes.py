@@ -30,7 +30,7 @@ def dikefailure(sb, inflow, hriver, hbas, hground, status_t1,
         B = Bmax * (1 - np.exp(-Brate*(simtime - tbreach)))
 
         if h1 > 0:
-            breachflow = 1.7*B*(h1)*1.5
+            breachflow = 1.7*B*(h1)**1.5
 
         # h1 <0 ==> no flow:          
         else: 

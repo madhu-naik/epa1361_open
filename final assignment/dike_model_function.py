@@ -10,8 +10,8 @@ from ema_workbench import ema_logging
 
 import funs_generate_network
 from funs_dikes import Lookuplin, dikefailure, init_node
-from funs_economy import cost_fun, discount
-from funs_hydrostat import werklijn_cdf
+from funs_economy import cost_fun, discount, cost_evacuation
+from funs_hydrostat import werklijn_cdf, werklijn_inv
 import numpy as np
 import pandas as pd
 
@@ -28,13 +28,13 @@ class DikeNetwork(object):
         
         # Load hydrological statistics:
         A = pd.read_excel('./data/hydrology/werklijn_params.xlsx')
-        Qpeaks = np.unique(np.loadtxt('./data/hydrology/Qpeak_unisamples125_12500.txt'))[::-1]
+        
+        lowQ, highQ = werklijn_inv([0.992, 0.99992], A)
+        Qpeaks = np.unique(np.asarray([np.random.uniform(lowQ, highQ)/6 for _ in range(0, 30)]))[::-1]
+
         # Probabiltiy of exceedence for the discharge @ Lobith (i.e. times 6)
-        p_exc = 1 - werklijn_cdf(Qpeaks*6, A) 
-        
-        # Identifiers of Room for the River projects:
-        vec_rfr_prjs = ['{}_RfR'.format(prj_id) for prj_id in G.node['RfR_projects'].keys()]
-        
+        p_exc = 1 - werklijn_cdf(Qpeaks*6, A)
+                
         self.Qpeaks = Qpeaks
         self.p_exc = p_exc
         self.A = A
@@ -47,14 +47,12 @@ class DikeNetwork(object):
         
         # Planning window [y]
         self.n = 50
-        # Interese rate [%]
-        self.rate = 4.5
+
         # Step of dike increase [cm]
         self.step = 10
         
-        # Time step correction from days (one Q per day) to secs (Q is in m3/s)
+        # Time step correction: Q is a mean daily value expressed in m3/s
         self.timestepcorr = 24*60*60
-        self.vec_rfr_prjs = vec_rfr_prjs
         ema_logging.info('model initialized')
 
     # Initialize hydrology at each node:  
@@ -65,93 +63,110 @@ class DikeNetwork(object):
         node['tbreach'] = np.nan
         return node  
 
-    # Initialize RfR costs and rating curve:
-    def _initialize_rfr(self, G, dike_list):
+    def _initialize_rfr_ooi(self, G, dikenodes):
+        for n in dikenodes:
+            node = G.node[n]
+            # Create a copy of the rating curve that will be used in the sim:
+            node['rnew'] = deepcopy(node['r'])
+            
+            # Initialize outcomes of interest (ooi):
+            node['losses'] = []
+            node['deaths'] = []
+            node['evacuation_costs'] = []
+            
         # Initialize room for the river
         G.node['RfR_projects']['cost'] = 0
-        for dike in dike_list:
-                G.node[dike]['rnew'] = deepcopy(G.node[dike]['r'])
         return G
 
-    def __call__(self, timestep=1, q = 4, **kwargs):
+    def __call__(self, timestep=1, **kwargs):
         
         G = self.G
         Qpeaks = self.Qpeaks
         step = self.step
-        vec_rfr_prjs = self.vec_rfr_prjs
         dikelist = self.dikelist
         
         # Call RfR initialization:
-        self._initialize_rfr(G, dikelist)
-        
+        self._initialize_rfr_ooi(G, dikelist)
+           
         # Load all kwargs into network. Kwargs are uncertainties and levers:
         for item in kwargs:
-             string1, string2 = item.split('_')
-             
-             if item in vec_rfr_prjs:
-             # string1: projectID
-             # string2: rfr
-             # Note: kwargs[item] can be either 0 (no project) or 1 (yes project)        
-             
-                proj_node = G.node['RfR_projects']
-                # Cost of RfR project
-                proj_node['cost'] += kwargs[item]*proj_node[string1]['costs_1e6']*1e6
-                
-                # Iterate over the location affected by the project
-                for key in proj_node[string1].keys():
-                    if key != 'costs_1e6':
-                       # Change in rating curve due to the RfR project
-                       G.node[key]['rnew'][:, 1] -= kwargs[item]*proj_node[string1][key]
-                
+             # when item is 'discount rate':
+             if item == 'discount rate':                     
+                  G.node[item]['value'] = kwargs[item]
+             # the rest of the times you always get a string like {}_{}:                        
              else:
-             # string1: dikename
-             # string2: name of uncertainty or lever
-                 G.node[string1][string2] = kwargs[item]
-                 node = G.node[string1]                      
+#                print(item)     
+                string1, string2 = item.split('_')
+                 
+                if string2 == 'RfR':
+                    # string1: projectID
+                    # string2: rfr
+                    # Note: kwargs[item] in this case can be either 0 
+                    # (no project) or 1 (yes project)  
              
-                 if string2 == 'DikeIncrease':
-                     
-                      # Rescale according to step and tranform in meters
-                      node[string2] = (kwargs[item] * step)/100.0
-                      # Initialize fragility curve:
-                      node['fnew'] = deepcopy(node['f'])
-                      # Shift it to the degree of dike heigthening:                                           
-                      node['fnew'][:,0] += node[string2]
+                    proj_node = G.node['RfR_projects']
+                    # Cost of RfR project
+                    proj_node['cost'] += kwargs[item]*proj_node[string1][
+                                         'costs_1e6']*1e6
+                
+                    # Iterate over the location affected by the project
+                    for key in proj_node[string1].keys():
+                        if key != 'costs_1e6':
+                           # Change in rating curve due to the RfR project
+                           G.node[key]['rnew'][:, 1] -= kwargs[item]*proj_node[
+                                                                  string1][key]                
+                else:
+                     # string1: dikename or EWS
+                     # string2: name of uncertainty or lever
+                     G.node[string1][string2] = kwargs[item]
+             
+                     if string2 == 'DikeIncrease':
                          
-                      # Calculate dike heigheting costs:                                        
-                      if node[string2] == 0:
-                           node['dikecosts'] = 0
-                      else:  
-                           node['dikecosts'] = cost_fun(node['traj_ratio'],
+                         node = G.node[string1]
+                         # Rescale according to step and tranform in meters
+                         node[string2] = (kwargs[item] * step)/100.0
+                         # Initialize fragility curve:
+                         node['fnew'] = deepcopy(node['f'])
+                         # Shift it to the degree of dike heigthening:                                           
+                         node['fnew'][:,0] += node[string2]
+                         
+                         # Calculate dike heigheting costs:                                        
+                         if node[string2] == 0:
+                              node['dikecosts'] = 0
+                         else:  
+                              node['dikecosts'] = cost_fun(
+                                                        node['traj_ratio'],
                                                         node['c'], 
                                                         node['b'], 
                                                         node['lambda'], 
                                                         node['dikelevel'], 
                                                         node[string2])
-                 elif string2 == 'DamageReduction':   
-                      node['DamageRedcosts'] = node[string2]/100.0 * 10e6
+                           
+        # Percentage of people which cant be evacuated for a given warning time:
+        G.node['EWS']['evacuation_percentage'] = G.node['EWS']['evacuees'][
+                                                 G.node['EWS']['DaysToThreat']]
                                                               
         # Dictionary storing outputs:                      
         data = {}
-        # Outputs of interest:
-        losses = {dike: [] for dike in self.dikelist}
         
         for Qpeak in Qpeaks:
-            time = np.arange(0, G.node['A.0']['Qevents_shape'].loc[q].shape[0], timestep)
-            Q = Qpeak*G.node['A.0']['Qevents_shape'].loc[q]
+            node = G.node['A.0']    
+            waveshape_id = node['ID flood wave shape']
+                
+            time = np.arange(0, node['Qevents_shape'].loc[waveshape_id].shape[0], 
+                             timestep)
+            node['Qout'] = Qpeak*node['Qevents_shape'].loc[waveshape_id]
             
             # Initialize hydrological event:
-            for key in G.nodes():
+            for key in dikelist:
                 node = G.node[key]
-                Q_0 = int(Q[0])
                 
-                if node['type'] == 'dike':
-                    self._initialize_hydroloads(node, time, Q_0)
-                    # Calculate critical water level: water above which failure occurs
-                    node['critWL'] = Lookuplin(node['fnew'], 1, 0, node['pfail'])
-                    
-                elif node['type'] == 'upstream':
-                    node['Qout'] = Q
+                Q_0 = int(G.node['A.0']['Qout'][0])
+                
+                self._initialize_hydroloads(node, time, Q_0)
+                # Calculate critical water level: water above which failure occurs
+                node['critWL'] = Lookuplin(node['fnew'], 1, 0, node['pfail'])
+
             
             # Run the simulation:                    
             # Run over the discharge wave:     
@@ -168,7 +183,6 @@ class DikeNetwork(object):
 						       C3 = node['C3']
                             
 						       prec_node = G.node[node['prec_node']]
-                           
 						       # Evaluate Q coming in a given node at time t:                            
 						       node['Qin'][t] = Muskingum(C1, C2, C3,
                                                    prec_node['Qout'][t],
@@ -196,9 +210,8 @@ class DikeNetwork(object):
 						       # of Q in time up to time t.                             
 						       node['cumVol'][t] = np.trapz(node['Qpol'])*self.timestepcorr
                             
-						       Area = Lookuplin(node['table'].values, 4, 0, node['wl'][t])
-						       node['hbas'][t] = node['cumVol'][t]/float(Area)                   
-                        
+						       Area = Lookuplin(node['table'], 4, 0, node['wl'][t])
+						       node['hbas'][t] = node['cumVol'][t]/float(Area)                       
                             
                     elif node['type'] == 'downstream':
 						       node['Qin'] = G.node[dikelist[n-1]]['Qout']
@@ -208,27 +221,48 @@ class DikeNetwork(object):
                  node = G.node[dike]
 
                  # If breaches occured:
-                 if node['status'][-1] != False:
-                    # Losses per event:
-                    dam_red = (1 - node['DamageReduction']/100.0)
-                    losses[dike].append(dam_red*Lookuplin(node['table'].values, 
-                                                     4, 3, np.max(node['wl'])))
+                 if node['status'][-1] == True:
+                       # Losses per event:        
+                       node['losses'].append(Lookuplin(node['table'],
+                                             6, 4, np.max(node['wl'])))
+                             
+                       node['deaths'].append(Lookuplin(node['table'],
+                                             6, 3, np.max(node['wl']))*(
+                                     1-G.node['EWS']['evacuation_percentage']))
+                             
+                       node['evacuation_costs'].append(cost_evacuation(Lookuplin(
+                                       node['table'], 6, 5, np.max(node['wl'])
+                                       )*G.node['EWS']['evacuation_percentage'],
+                                       G.node['EWS']['DaysToThreat']))
                  else:
-                    losses[dike].append(0)
-                         
+                       node['losses'].append(0)
+                       node['deaths'].append(0)
+                       node['evacuation_costs'].append(0)
+        
+        EECosts = []                     
         # Iterate over the network,compute and store ooi over all events                                 
-        for dike in self.dikelist:
+        for dike in dikelist:
             node = G.node[dike]
-
-            # Annual risk per dike ring = integral losses-prob:        
-            EAD = np.trapz(losses[dike], self.p_exc)
                 
+            # Expected Annual Damage:
+            EAD = np.trapz(node['losses'], self.p_exc)
             # Discounted annual risk per dike ring:
-            disc_EAD = np.sum(discount(EAD, rate=self.rate, n = self.n)) 
+            disc_EAD = np.sum(discount(EAD, rate=G.node['discount rate']['value'], 
+                                       n=self.n))
+
+            # Expected Annual number of deaths:
+            END = np.trapz(node['deaths'], self.p_exc)
+                
+            # Expected Evacuation costs: depend on the event, the higher 
+            # the event, the more people you have got to evacuate:
+            EECosts.append(np.trapz(node['evacuation_costs'], self.p_exc))    
 
             data.update({'{}_Expected Annual Damage'.format(dike): disc_EAD,
-                         '{}_Dike Investment Costs'.format(dike): 
-                         sum([node[k] for k in ['dikecosts', 'DamageRedcosts']])})
+                         '{}_Expected Number of Deaths'.format(dike): END,
+                         '{}_Dike Investment Costs'.format(dike): node['dikecosts']})
 
         data.update({'RfR Total Costs': G.node['RfR_projects']['cost']})
+        data.update({'Expected Evacuation Costs': np.sum(EECosts)})
+        
         return data
+

@@ -17,41 +17,37 @@ if __name__ == '__main__':
 
     dike_model = get_model_for_problem_formulation(2)
     
-    scen1 = {'A.2_pfail':0.5, 'A.2_Bmax':175,'A.2_Brate':1.5,'A.3_pfail':0.5,
-    		  'A.3_Bmax':175,'A.3_Brate':1.5,'A.4_pfail':0.5,'A.4_Bmax':175,
-    		  'A.4_Brate':1.5, 'A.5_pfail':0.5,'A.5_Bmax':175,'A.5_Brate':1.5,
-            'A.1_pfail':0.5,'A.1_Bmax':175,'A.1_Brate':1.5}
-
-    scen2 = {'A.2_pfail':0.2, 'A.2_Bmax':250,'A.2_Brate':1000,'A.3_pfail':0.2,
-    		  'A.3_Bmax':250,'A.3_Brate':1000,'A.4_pfail':0.2,'A.4_Bmax':250,
-    		  'A.4_Brate':1000, 'A.5_pfail':0.2,'A.5_Bmax':250,'A.5_Brate':1000,
-            'A.1_pfail':0.2,'A.1_Bmax':250,'A.1_Brate':1000}
-
-    scen3 = {'A.2_pfail':0.7, 'A.2_Bmax':30,'A.2_Brate':0.9,'A.3_pfail':0.7,
-    		  'A.3_Bmax':30,'A.3_Brate':0.9,'A.4_pfail':0.7,'A.4_Bmax':30,
-    		  'A.4_Brate':0.9, 'A.5_pfail':0.7,'A.5_Bmax':30,'A.5_Brate':0.9,
-            'A.1_pfail':0.7,'A.1_Bmax':30,'A.1_Brate':0.9}
+    reference_values = {'Bmax': 175, 'Brate': 1.5, 'pfail': 0.5, 
+                        'discount rate': 3.5,
+                        'ID flood wave shape': 4}
+    scen1 = {}
     
+    for key in dike_model.uncertainties:
+            name_split = key.name.split('_')
+
+            if len(name_split) == 1:
+                 scen1.update({key.name: reference_values[key.name]})
+                                
+            else:                 
+                 scen1.update({key.name: reference_values[name_split[1]]})
         
-    ref_scenario = Scenario(**scen1)
-    worst_scenario = Scenario(**scen2)
-    strongdikes_scenario = Scenario(**scen3)
+    ref_scenario = Scenario('reference', **scen1)
 
     convergence_metrics = [EpsilonProgress()]
     
-    espilonPF2 = [1e3]*len(dike_model.levers)
+    espilon = [1e3]*len(dike_model.outcomes)
 
     nfe = 200
 
 # OPTIMIZATION:
-#    results = optimize(dike_model, nfe=100, searchover='levers',
-#                       epsilons=espilonPF2,
-#                       convergence = convergence_metrics, reference = ref_scenario)
-    
+#    results, convergence = optimize(dike_model, nfe=nfe, searchover='levers',
+#                                    epsilons=espilon, convergence = convergence_metrics, 
+#                                    reference = ref_scenario)
+#    
     with MultiprocessingEvaluator(dike_model) as evaluator:
         results, convergence = evaluator.optimize(nfe = nfe,
                                   searchover = 'levers', 
-                                  epsilons = espilonPF2,
+                                  epsilons = espilon,
                                   convergence = convergence_metrics, 
                                   reference = ref_scenario
                                   )

@@ -17,16 +17,24 @@ if __name__ == '__main__':
     dike_model = get_model_for_problem_formulation(0)
     
     ## Build a user-defined scenario and policy:
-    average_values = {'Bmax': 175, 'Brate': 1.5, 'pfail': 0.5}
+    reference_values = {'Bmax': 175, 'Brate': 1.5, 'pfail': 0.5, 
+                        'discount rate': 3.5,
+                        'ID flood wave shape': 4}
     scen1 = {}
-    
+
     for key in dike_model.uncertainties:
-            dikename, unc = key.name.split('_')
-            scen1.update({key.name: average_values[unc]})
+            name_split = key.name.split('_')
+
+            if len(name_split) == 1:
+                 scen1.update({key.name: reference_values[key.name]})
+                                
+            else:                 
+                 scen1.update({key.name: reference_values[name_split[1]]})
         
     ref_scenario = Scenario('reference', **scen1)
     
-    zero_policy = {'DikeIncrease': 3, 'DamageReduction': 30, 'RfR': 1}
+    # no dike increase, no warning, none of the rfr
+    zero_policy = {'DikeIncrease': 0, 'DaysToThreat': 0, 'RfR': 0}
     pol0 = {}
     
     for key in dike_model.levers:
