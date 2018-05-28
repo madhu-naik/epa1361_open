@@ -26,9 +26,10 @@ def get_network():
         G.add_node(key, **attr)
 
     # Select dike type nodes
+    branches = df['branch'].dropna().unique()
     dike_list = df['type'][df['type'] == 'dike'].index.values
     dike_branches = {k: df[df['branch'] == k].index.values
-                     for k in np.unique(df['branch'])}
+                     for k in branches}
 
     # Upload fragility curves:
     frag_curves = pd.read_excel('./data/fragcurves/frag_curves.xlsx',
