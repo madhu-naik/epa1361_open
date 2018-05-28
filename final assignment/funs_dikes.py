@@ -7,40 +7,39 @@ Created on Thu Jul 06 14:51:04 2017
 import numpy as np
 
 
-def dikefailure(sb, inflow, hriver, hbas, hground, status_t1, 
+def dikefailure(sb, inflow, hriver, hbas, hground, status_t1,
                 Bmax, Brate, simtime, tbreach, critWL):
-        
-    ''' Function establising dike failure as well as flow balance between the 
-        river and the polder 
-        
+    ''' Function establising dike failure as well as flow balance between the
+        river and the polder
+
          inflow = flow coming into the node
          status = if False the dike has not failed yet
-         critWL = water level above which we have failure        
-        
-    '''    
+         critWL = water level above which we have failure
+
+    '''
     tbr = tbreach
     #    h1 = hriver - hbreach
     #    h2 = (hbas + hground) - hbreach
 
     # h river is a water level, hbas a water depth
     h1 = hriver - (hground + hbas)
-    
+
     # if the dike has already failed:
     if status_t1 == True:
-        B = Bmax * (1 - np.exp(-Brate*(simtime - tbreach)))
+        B = Bmax * (1 - np.exp(-Brate * (simtime - tbreach)))
 
         if h1 > 0:
-            breachflow = 1.7*B*(h1)**1.5
+            breachflow = 1.7 * B * (h1)**1.5
 
-        # h1 <0 ==> no flow:          
-        else: 
+        # h1 <0 ==> no flow:
+        else:
             breachflow = 0
-            
+
         outflow = max(0, inflow - breachflow)
         status_t2 = status_t1
-        
-    # if the dike has not failed yet:     
-    else: 
+
+    # if the dike has not failed yet:
+    else:
         failure = hriver > critWL
         outflow = inflow
         breachflow = 0
@@ -51,64 +50,35 @@ def dikefailure(sb, inflow, hriver, hbas, hground, status_t1,
         # if it does not:
         else:
             status_t2 = False
-    
+
     # if effects of hydrodynamic system behaviour have to be ignored:
     if sb == False:
         outflow = inflow
-		      
+
     return outflow, breachflow, status_t2, tbr
+
 
 def Lookuplin(MyFile, inputcol, searchcol, inputvalue):
     ''' Linear lookup function '''
-    
-    minTableValue=min(MyFile[:,inputcol])
-    maxTableValue=max(MyFile[:,inputcol])
-    
-    if inputvalue >= maxTableValue: 
-        inputvalue=maxTableValue-0.01 
+
+    minTableValue = min(MyFile[:, inputcol])
+    maxTableValue = max(MyFile[:, inputcol])
+
+    if inputvalue >= maxTableValue:
+        inputvalue = maxTableValue - 0.01
     if inputvalue < minTableValue:
-        inputvalue=minTableValue+0.01
-        
-    A = max(MyFile[MyFile[:,inputcol] <= inputvalue,inputcol])
-    B = min(MyFile[MyFile[:,inputcol] > inputvalue,inputcol]) 
-    C = max(MyFile[MyFile[:,inputcol] == A,searchcol]) 
-    D = min(MyFile[MyFile[:,inputcol] == B,searchcol])
-    
-    outpuvalue = C-((D-C)*((inputvalue-A)/(A-B)))*1.0
-    
+        inputvalue = minTableValue + 0.01
+
+    A = max(MyFile[MyFile[:, inputcol] <= inputvalue, inputcol])
+    B = min(MyFile[MyFile[:, inputcol] > inputvalue, inputcol])
+    C = max(MyFile[MyFile[:, inputcol] == A, searchcol])
+    D = min(MyFile[MyFile[:, inputcol] == B, searchcol])
+
+    outpuvalue = C - ((D - C) * ((inputvalue - A) / (A - B))) * 1.0
+
     return outpuvalue
 
 
 def init_node(value, time):
-        init = np.repeat(value, len(time)).tolist()
-        return init
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    init = np.repeat(value, len(time)).tolist()
+    return init
