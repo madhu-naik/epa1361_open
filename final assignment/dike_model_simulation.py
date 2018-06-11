@@ -2,7 +2,8 @@ from __future__ import (unicode_literals, print_function, absolute_import,
                         division)
 
 
-from ema_workbench import (Model, MultiprocessingEvaluator, Policy, Scenario)
+from ema_workbench import (Model, MultiprocessingEvaluator, Policy,
+                           Scenario)
 
 from ema_workbench.em_framework.evaluators import perform_experiments
 from ema_workbench.em_framework.samplers import sample_uncertainties
@@ -59,5 +60,6 @@ if __name__ == '__main__':
 #    experiments, outcomes = perform_experiments(dike_model, ref_scenario, 5)
 
 # multiprocessing
-#    with MultiprocessingEvaluator(dike_model) as evaluator:
-#        results = evaluator.perform_experiments(ref_scenario, policies[0])
+    with MultiprocessingEvaluator(dike_model) as evaluator:
+        results = evaluator.perform_experiments(10, [policy0],
+                                                uncertainty_sampling='sobol')
