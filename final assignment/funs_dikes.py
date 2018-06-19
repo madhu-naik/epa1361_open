@@ -61,18 +61,18 @@ def dikefailure(sb, inflow, hriver, hbas, hground, status_t1,
 def Lookuplin(MyFile, inputcol, searchcol, inputvalue):
     ''' Linear lookup function '''
 
-    minTableValue = min(MyFile[:, inputcol])
-    maxTableValue = max(MyFile[:, inputcol])
+    minTableValue = np.min(MyFile[:, inputcol])
+    maxTableValue = np.max(MyFile[:, inputcol])
 
     if inputvalue >= maxTableValue:
         inputvalue = maxTableValue - 0.01
-    if inputvalue < minTableValue:
+    elif inputvalue < minTableValue:
         inputvalue = minTableValue + 0.01
 
-    A = max(MyFile[MyFile[:, inputcol] <= inputvalue, inputcol])
-    B = min(MyFile[MyFile[:, inputcol] > inputvalue, inputcol])
-    C = max(MyFile[MyFile[:, inputcol] == A, searchcol])
-    D = min(MyFile[MyFile[:, inputcol] == B, searchcol])
+    A = np.max(MyFile[MyFile[:, inputcol] <= inputvalue, inputcol])
+    B = np.min(MyFile[MyFile[:, inputcol] > inputvalue, inputcol])
+    C = np.max(MyFile[MyFile[:, inputcol] == A, searchcol])
+    D = np.min(MyFile[MyFile[:, inputcol] == B, searchcol])
 
     outpuvalue = C - ((D - C) * ((inputvalue - A) / (A - B))) * 1.0
 
