@@ -11,7 +11,7 @@ def to_dict_dropna(data):
                 for k, v in pd.compat.iteritems(data))
 
 
-def get_network():
+def get_network(plann_steps_max=10):
     ''' Build network uploading crucial parameters '''
 
     # Upload dike info
@@ -38,10 +38,15 @@ def get_network():
         './data/fragcurves/calfactors_pf1250.xlsx')
 
     # Upload room for the river projects:
-    G.add_node('RfR_projects', **to_dict_dropna(
-        pd.read_excel('./data/rfr_strategies.xlsx', index_col=0,
+    steps = np.array(range(plann_steps_max))
+    
+    for n in steps:
+        G.add_node('RfR_projects {}'.format(n), **to_dict_dropna(
+                pd.read_excel('./data/rfr_strategies.xlsx', index_col=0,
                       names=range(5))))
-    G.node['RfR_projects']['type'] = 'measure'
+        G.node['RfR_projects {}'.format(n)]['type'] = 'measure'
+
+        G.add_node('discount rate {}'.format(n), **{'value': 0})
 
     # Upload evacuation policies:
     G.add_node('EWS', **pd.read_excel('./data/EWS.xlsx').to_dict())
@@ -75,11 +80,9 @@ def get_network():
         G.node[dike]['C1'] = Muskingum_params.loc[G.node[dike]['prec_node'], 'C1']
         G.node[dike]['C2'] = Muskingum_params.loc[G.node[dike]['prec_node'], 'C2']
         G.node[dike]['C3'] = Muskingum_params.loc[G.node[dike]['prec_node'], 'C3']
-
+            
     # The plausible 133 upstream wave-shapes:
     G.node['A.0']['Qevents_shape'] = pd.read_excel(
         './data/hydrology/wave_shapes.xls')
 
-    G.add_node('discount rate', **{'value': 0})
-
-    return G, dike_list, dike_branches
+    return G, dike_list, dike_branches, steps

@@ -10,7 +10,6 @@ import numpy as np
 def cost_fun(ratio, c, b, lambd, dikeinit, dikeincrease):
     ''' Cost of raising the dikes, assuming an exponential function '''
 
-    dikeinit = 0
     dikeincrease = dikeincrease * 100  # cm
     dikeinit = dikeinit * 100
 

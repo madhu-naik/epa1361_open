@@ -15,12 +15,12 @@ from problem_formulation import get_model_for_problem_formulation
 if __name__ == '__main__':
     ema_logging.log_to_stderr(ema_logging.INFO)
 
-    dike_model = get_model_for_problem_formulation(0)
+    dike_model, planning_steps = get_model_for_problem_formulation(0)
 
     # Build a user-defined scenario and policy:
     reference_values = {'Bmax': 175, 'Brate': 1.5, 'pfail': 0.5,
-                        'discount rate': 3.5,
-                        'ID flood wave shape': 4}
+                        'ID flood wave shape': 4, 'planning steps': 2}
+    reference_values.update({'discount rate {}'.format(n): 3.5 for n in planning_steps})
     scen1 = {}
 
     for key in dike_model.uncertainties:
@@ -35,7 +35,9 @@ if __name__ == '__main__':
     ref_scenario = Scenario('reference', **scen1)
 
     # no dike increase, no warning, none of the rfr
-    zero_policy = {'DikeIncrease': 0, 'DaysToThreat': 0, 'RfR': 0}
+    zero_policy = {'DaysToThreat': 0}
+    zero_policy.update({'DikeIncrease {}'.format(n): 0 for n in planning_steps})
+    zero_policy.update({'RfR {}'.format(n): 0 for n in planning_steps})
     pol0 = {}
 
     for key in dike_model.levers:
@@ -50,16 +52,16 @@ if __name__ == '__main__':
 #    n_policies = 10
 
     # single run
-    start = time.time()
-    dike_model.run_model(ref_scenario, policy0)
-    end = time.time()
-    print(end - start)
-    results = dike_model.outcomes_output
+#    start = time.time()
+#    dike_model.run_model(ref_scenario, policy0)
+#    end = time.time()
+#    print(end - start)
+#    results = dike_model.outcomes_output
 
     # series run
-#    experiments, outcomes = perform_experiments(dike_model, ref_scenario, 5)
+    experiments, outcomes = perform_experiments(dike_model, ref_scenario, 5)
 
 # multiprocessing
-    with MultiprocessingEvaluator(dike_model) as evaluator:
-        results = evaluator.perform_experiments(10, [policy0],
-                                                uncertainty_sampling='sobol')
+#    with MultiprocessingEvaluator(dike_model) as evaluator:
+#        results = evaluator.perform_experiments(scenarios=10, policies=policy0,
+#                                                uncertainty_sampling='sobol')
