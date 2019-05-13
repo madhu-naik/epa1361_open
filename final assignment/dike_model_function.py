@@ -187,7 +187,7 @@ class DikeNetwork(object):
 
                 # Run the simulation:
                 # Run over the discharge wave:
-                for t in range(1, len(time)):
+                for t in range(1, len(time)-1):
                     # Run over each node of the branch:
                     for n in range(0, len(dikelist)):
                         # Select current node:
