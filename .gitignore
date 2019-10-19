@@ -7,3 +7,4 @@
 *.pyc
 *.so
 *.c
+.DS_Store
